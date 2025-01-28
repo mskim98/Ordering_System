@@ -1,0 +1,21 @@
+# Node.js 관련
+node_modules
+npm-debug.log
+
+# 빌드 관련
+.next
+out
+.cache
+
+# 환경 파일
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE/OS 관련
+.DS_Store
+.idea
+.vscode
+*.swp
