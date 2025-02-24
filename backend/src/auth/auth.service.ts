@@ -4,12 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/user/entities/user.entity';
+import { Role, User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { envVaribaleKeys } from 'src/common/const/env.const';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -17,8 +18,10 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly configServcie: ConfigService,
+    private readonly jwtService: JwtService,
   ) {}
 
+  /** 회원가입 */
   parseBasicToken(rawToken: string) {
     /** [Basic, token] */
     const basicSplit = rawToken.split(' ');
@@ -48,13 +51,34 @@ export class AuthService {
     };
   }
 
+  async issueToken(user: { id: number; role: Role }, isRefreshToken: boolean) {
+    const refreshTokenSecret = this.configServcie.get<string>(
+      envVaribaleKeys.refreshTokenSecret,
+    );
+    const accessTokenSecret = this.configServcie.get<string>(
+      envVaribaleKeys.accessTokenSecret,
+    );
+
+    return this.jwtService.signAsync(
+      {
+        sub: user.id,
+        role: user.role,
+        type: isRefreshToken ? 'refresh' : 'access',
+      },
+      {
+        secret: isRefreshToken ? refreshTokenSecret : accessTokenSecret,
+        expiresIn: isRefreshToken ? '24h' : 300,
+      },
+    );
+  }
+
   async userCheck(email: string) {
     const user = await this.userRepository.findOne({
       where: { email },
     });
 
     if (!user) {
-      throw new NotFoundException('잘못된 로그인 정보입니다.');
+      throw new NotFoundException('잘못된 로그인 포멧입니다.');
     }
   }
 
@@ -82,5 +106,26 @@ export class AuthService {
     });
 
     return this.userRepository.findOne({ where: { email } });
+  }
+
+  async login(rawToken: string) {
+    const { email, password } = this.parseBasicToken(rawToken);
+
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException('잘못된 로그인 정보입니다.');
+    }
+
+    const passOk = await bcrypt.compare(password, user.password);
+
+    if (!passOk) {
+      throw new BadRequestException('잘못된 로그인 정보입니다.');
+    }
+
+    return {
+      refreshToken: await this.issueToken(user, true),
+      accessToken: await this.issueToken(user, false),
+    };
   }
 }

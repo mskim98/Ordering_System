@@ -15,4 +15,9 @@ export class AuthController {
   ) {
     return this.authService.register(token, body);
   }
+
+  @Post('login')
+  loginUser(@Headers('authorization') token: string) {
+    return this.authService.login(token);
+  }
 }

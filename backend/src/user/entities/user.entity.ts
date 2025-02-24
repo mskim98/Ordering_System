@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { TimeLineField } from 'src/common/entity/timeline.entity';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -30,5 +31,8 @@ export class User extends TimeLineField {
   email: string;
 
   @Column({ length: 255 })
+  @Exclude({
+    toPlainOnly: true,
+  })
   password: string;
 }
