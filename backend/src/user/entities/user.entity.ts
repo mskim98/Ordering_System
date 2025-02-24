@@ -1,11 +1,16 @@
 import { TimeLineField } from 'src/common/entity/timeline.entity';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-/// 사용자 계층
+/**
+ * 사용자 계층
+ */
 export enum Role {
-  admin, /// 관리자
-  partner, /// 협력사
-  owner, /// 점주
+  /** 관리자 */
+  admin,
+  /** 협력사 */
+  partner,
+  /** 점주 */
+  owner,
 }
 @Entity()
 export class User extends TimeLineField {
@@ -13,10 +18,10 @@ export class User extends TimeLineField {
   id: number;
 
   @Column()
-  u_name: string;
+  name: string;
 
   @Column()
-  u_phone: number;
+  phone: string;
 
   @Column({ enum: Role })
   role: Role;
@@ -24,6 +29,6 @@ export class User extends TimeLineField {
   @Column()
   email: string;
 
-  @Column()
+  @Column({ length: 255 })
   password: string;
 }

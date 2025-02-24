@@ -1,15 +1,12 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
-import { StoreModule } from './store/store.module';
-import { WarehouseModule } from './warehouse/warehouse.module';
-import { DeliveryModule } from './delivery/delivery.module';
-import { ItemModule } from './item/item.module';
-import { OrderModule } from './order/order.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { envVaribaleKeys } from './common/const/env.const';
 import { User } from './user/entities/user.entity';
+import { AuthorizeModule } from './authorize/authorize.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -42,6 +39,8 @@ import { User } from './user/entities/user.entity';
       inject: [ConfigService],
     }),
     UserModule,
+    AuthorizeModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
