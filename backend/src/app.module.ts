@@ -5,11 +5,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { envVaribaleKeys } from './common/const/env.const';
 import { User } from './user/entities/user.entity';
-import { AuthorizeModule } from './authorize/authorize.module';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
+    /** env 검증 파트 */
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -20,11 +20,12 @@ import { AuthModule } from './auth/auth.module';
         DB_USERNAME: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
         DB_DATABASE: Joi.string().required(),
-        // HASH_ROUNDS: Joi.number().required(),
-        // ACCESS_TOKEN_SECRET: Joi.string().required(),
-        // REFRESH_TOKEN_SECRET: Joi.string().required(),
+        HASH_ROUNDS: Joi.number().required(),
+        ACCESS_TOKEN_SECRET: Joi.string().required(),
+        REFRESH_TOKEN_SECRET: Joi.string().required(),
       }),
     }),
+    /** db 연결 파트 */
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: configService.get<string>(envVaribaleKeys.dbType) as 'postgres',
@@ -38,8 +39,8 @@ import { AuthModule } from './auth/auth.module';
       }),
       inject: [ConfigService],
     }),
+    /** 사용 모듈 */
     UserModule,
-    AuthorizeModule,
     AuthModule,
   ],
 })
