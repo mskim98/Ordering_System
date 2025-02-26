@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -6,6 +6,7 @@ import * as Joi from 'joi';
 import { envVaribaleKeys } from './common/const/env.const';
 import { User } from './user/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
+import { TokenAuthanicator } from './auth/middleware/tokenAuthanticator.middleware';
 
 @Module({
   imports: [
@@ -44,4 +45,8 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TokenAuthanicator).forRoutes('*');
+  }
+}
