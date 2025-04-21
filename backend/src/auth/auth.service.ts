@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role, User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -44,9 +40,9 @@ export class AuthService {
   }
 
   /** 회원가입 */
-  async register(info, createUserDto: CreateUserDto) {
+  async register(createUserDto: CreateUserDto) {
     try {
-      const { email, password } = info;
+      const { email, password } = createUserDto;
       const user = await this.userRepository.findOne({
         where: { email },
       });
@@ -62,15 +58,15 @@ export class AuthService {
       );
 
       /** 사용자 데이터 저장 */
-      await this.userRepository.save({
+      const newUser = await this.userRepository.save({
         ...createUserDto,
-        email,
+
         password: hash,
       });
 
-      return this.userRepository.findOne({ where: { email } });
+      return newUser;
     } catch (e) {
-      if (e.message === 'exisiting email') {
+      if (e.message === 'existing email') {
         throw new BadRequestException('이미 가입된 이메일입니다.');
       }
 
@@ -103,9 +99,5 @@ export class AuthService {
     } catch (e) {
       throw new BadRequestException('잘못된 로그인 정보입니다.');
     }
-  }
-
-  async accessTest(info) {
-    return info;
   }
 }

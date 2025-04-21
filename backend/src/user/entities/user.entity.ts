@@ -7,11 +7,11 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  */
 export enum Role {
   /** 관리자 */
-  admin = 'admin',
+  admin,
   /** 협력사 */
-  partner = 'partner',
+  partner,
   /** 점주 */
-  owner = 'owner',
+  owner,
 }
 @Entity()
 export class User extends TimeLineField {
@@ -24,7 +24,7 @@ export class User extends TimeLineField {
   @Column()
   phone: string;
 
-  @Column({ type: 'enum', enum: Role })
+  @Column({ enum: Role, default: Role.admin })
   role: Role;
 
   @Column()

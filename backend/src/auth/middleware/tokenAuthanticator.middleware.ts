@@ -21,9 +21,9 @@ export class TokenAuthanicator implements NestMiddleware {
     const authHeader = req.headers['authorization'];
 
     /** 검증 헤더 없는 경우 패스 */
+    /** 현재 서비스는 모두 토큰(Basic, Bearer) 인증 방식을 사용하지만 이후를 위해 usecase 확보 */
     if (!authHeader) {
-      next();
-      return;
+      throw new UnauthorizedException('인증 토큰이 필요합니다.');
     }
 
     /** 검증 헤더가 있는 경우 */
@@ -35,7 +35,11 @@ export class TokenAuthanicator implements NestMiddleware {
       req.user = validatedResult;
       next();
     } catch (e) {
-      throw new UnauthorizedException('토큰 검증 실패');
+      if (e.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('토큰이 만료되었습니다.');
+      } else {
+        throw new UnauthorizedException('토큰 검증 실패');
+      }
     }
   }
 
@@ -49,6 +53,7 @@ export class TokenAuthanicator implements NestMiddleware {
     } else {
       /** Bearer 인 경우 */
       /** access 인 경우, refresh인 경우 */
+      /** payload 반환 */
       return this.bearerTokenValidate(token);
     }
   }
@@ -121,7 +126,7 @@ export class TokenAuthanicator implements NestMiddleware {
 
       /** payload로부터 토큰 type 확인 */
       if (bearerType !== 'access' && bearerType !== 'refresh') {
-        throw new Error('token Type error');
+        throw new Error('Token Type Error');
       }
 
       /** 토큰 타입에 맞는 시크릿키 가져오기 */
@@ -136,7 +141,7 @@ export class TokenAuthanicator implements NestMiddleware {
 
       return payload;
     } catch (e) {
-      if (e.message == 'token Type error') {
+      if (e.message == 'Token Type Error') {
         throw new UnauthorizedException('잘못된 토큰 타입');
       }
 
