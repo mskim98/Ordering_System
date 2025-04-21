@@ -7,6 +7,8 @@ import { envVaribaleKeys } from './common/const/env.const';
 import { User } from './user/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { TokenAuthanicator } from './auth/middleware/tokenAuthanticator.middleware';
+import { APP_GUARD } from '@nestjs/core';
+import { RBACGuard } from './auth/guard/rbac.guard';
 
 @Module({
   imports: [
@@ -43,6 +45,13 @@ import { TokenAuthanicator } from './auth/middleware/tokenAuthanticator.middlewa
     /** 사용 모듈 */
     UserModule,
     AuthModule,
+  ],
+  /** 모든 요청에 대해서 AuthGuard를 적용 */
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: RBACGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {
