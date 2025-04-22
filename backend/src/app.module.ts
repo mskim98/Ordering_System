@@ -6,7 +6,7 @@ import * as Joi from 'joi';
 import { envVaribaleKeys } from './common/const/env.const';
 import { User } from './user/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
-import { TokenAuthanicator } from './auth/middleware/tokenAuthanticator.middleware';
+import { TokenAuthanticator } from './auth/middleware/tokenAuthanticator.middleware';
 import { APP_GUARD } from '@nestjs/core';
 import { RBACGuard } from './auth/guard/rbac.guard';
 
@@ -56,6 +56,6 @@ import { RBACGuard } from './auth/guard/rbac.guard';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TokenAuthanicator).forRoutes('*');
+    consumer.apply(TokenAuthanticator).forRoutes('*');
   }
 }

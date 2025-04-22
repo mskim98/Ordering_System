@@ -10,7 +10,7 @@ import { NextFunction, Request, Response } from 'express';
 import { envVaribaleKeys } from 'src/common/const/env.const';
 
 @Injectable()
-export class TokenAuthanicator implements NestMiddleware {
+export class TokenAuthanticator implements NestMiddleware {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
