@@ -47,6 +47,7 @@ export class StoreController {
   /** 점포 정보 업데이트 */
   @Patch(':id')
   @RBAC([Permission.STORE_UPDATE])
+  @UseInterceptors(TransactionInterceptor)
   async update(
     @Param('id') id: string,
     @Body() updateStoreDto: UpdateStoreDto,
@@ -58,6 +59,7 @@ export class StoreController {
   /** 점포 삭제 */
   @Delete(':id')
   @RBAC([Permission.STORE_DELETE])
+  @UseInterceptors(TransactionInterceptor)
   remove(@Param('id') id: string, @Request() req) {
     return this.storeService.remove(+id, req.queryRunner);
   }

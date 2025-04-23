@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { QueryRunner, Repository } from 'typeorm';
@@ -6,9 +10,6 @@ import { Store } from './entities/store.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { CommonService } from 'src/common/common.service';
-import { number } from 'joi';
-import e from 'express';
-import console from 'console';
 
 @Injectable()
 export class StoreService {
@@ -35,7 +36,7 @@ export class StoreService {
 
       return newStore;
     } catch (e) {
-      if (e.message === 'exisring') {
+      if (e.message === 'existing') {
         throw new BadRequestException('이미 존재하는 점포입니다.');
       }
       throw new BadRequestException('점포 생성 실패');
@@ -57,7 +58,7 @@ export class StoreService {
     });
 
     if (!store) {
-      throw new Error('존재하지 않는 점포입니다.');
+      throw new NotFoundException('존재하지 않는 점포입니다.');
     }
 
     return store;

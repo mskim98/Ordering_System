@@ -115,5 +115,6 @@ export class UserService {
   async remove(id: number) {
     const user = await this.IDCheck(id);
     await this.userRepository.delete(user.id);
+    return { message: '유저 삭제 완료' };
   }
 }
