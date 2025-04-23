@@ -1,6 +1,8 @@
 import { Exclude } from 'class-transformer';
 import { TimeLineField } from 'src/common/entity/timeline.entity';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Store } from 'src/store/entities/store.entity';
+import { Owner } from 'src/owner/entities/owner.entity';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 /** 사용자 계층 */
 export enum Role {
@@ -33,4 +35,7 @@ export class User extends TimeLineField {
     toPlainOnly: true,
   })
   password: string;
+
+  @OneToOne(() => Owner, (owner) => owner.user)
+  owner: Owner;
 }

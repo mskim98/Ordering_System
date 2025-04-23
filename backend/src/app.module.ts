@@ -14,6 +14,8 @@ import { Store } from './store/entities/store.entity';
 import { TransactionInterceptor } from './common/interceptor/transaction.interceptor';
 import { TimeoutInterceptor } from './common/interceptor/timeout.interceptor';
 import { CommonModule } from './common/common.module';
+import { OwnerModule } from './owner/owner.module';
+import { Owner } from './owner/entities/owner.entity';
 
 @Module({
   imports: [
@@ -42,7 +44,7 @@ import { CommonModule } from './common/common.module';
         username: configService.get<string>(envVaribaleKeys.dbUsername),
         password: configService.get<string>(envVaribaleKeys.dbPassword),
         database: configService.get<string>(envVaribaleKeys.dbDatabase),
-        entities: [User, Store],
+        entities: [User, Store, Owner],
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -52,6 +54,7 @@ import { CommonModule } from './common/common.module';
     AuthModule,
     StoreModule,
     CommonModule,
+    OwnerModule,
   ],
   /** 모든 요청에 대해서 AuthGuard를 적용 */
   providers: [
