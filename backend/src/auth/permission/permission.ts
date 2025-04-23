@@ -6,17 +6,17 @@ export enum Permission {
   USER_READONE = 'user_readone', // 개별유저 읽기
   USER_UPDATE = 'user_update', // 유저 수정
   USER_DELETE = 'user_delete', // 유저 삭제
-  ORDER_READ = 'order_read', // 발주 읽기
-  ORDER_WRITE = 'order_write', // 발주 쓰기
-  PRODUCT_MANAGEMENT = 'product_management', // 품목 관리
-  LOGISTICS_MANAGEMENT = 'logistics_management', // 물류/센터 관리
   STORE_CREATE = 'store_create', // 점포 생성
   STORE_READ = 'store_read', // 점포 읽기
   STORE_UPDATE = 'store_update', // 점포 수정
   STORE_DELETE = 'store_delete', // 점포 삭제
+  ORDER_READ = 'order_read', // 발주 읽기
+  ORDER_WRITE = 'order_write', // 발주 쓰기
+  LOGISTICS_MANAGEMENT = 'logistics_management', // 물류/센터 관리
   SALES_READ = 'sales_read', // 매출 읽기
   SALES_WRITE = 'sales_write', // 매출 쓰기
-  OWNER_HANDLE = 'owner_handle', // 점주 관리
+  OWNER_HANDLE = 'owner_handle', // 점포 - 점주 관리
+  ADMIN_ITEM = 'admin_item', // 품목 관리
 }
 
 // 각 역할별 권한 매핑
