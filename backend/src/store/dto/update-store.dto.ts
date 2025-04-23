@@ -18,7 +18,7 @@ export class UpdateStoreDto extends PartialType(CreateStoreDto) {
 
   @IsOptional()
   @IsBoolean()
-  breakCondition?: boolean;
+  holidayCondition?: boolean;
 
   @IsOptional()
   @IsBoolean()

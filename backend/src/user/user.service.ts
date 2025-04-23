@@ -78,14 +78,10 @@ export class UserService {
 
     try {
       /** 페이지네이션  */
-      const { nextCusor } = await this.commonService.CursorPagenationParamsQb(
-        qb,
-        Dto,
-      );
+      const { results, nextCusor } =
+        await this.commonService.CursorPagenationParamsQb(qb, Dto);
 
-      const [data, count] = await qb.getManyAndCount();
-
-      return { data, nextCusor, count };
+      return { results, nextCusor };
     } catch (e) {
       throw new BadRequestException('전체 유저 조회 실패');
     }

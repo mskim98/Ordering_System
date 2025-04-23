@@ -58,7 +58,7 @@ export class CommonService {
 
     const nextCusor = this.generateNextCursor(results, order);
 
-    return { qb, nextCusor };
+    return { results, nextCusor };
   }
 
   generateNextCursor<T>(results: T[], order: string[]): string | null {
