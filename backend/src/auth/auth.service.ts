@@ -60,7 +60,6 @@ export class AuthService {
       /** 사용자 데이터 저장 */
       const newUser = await this.userRepository.save({
         ...createUserDto,
-
         password: hash,
       });
 

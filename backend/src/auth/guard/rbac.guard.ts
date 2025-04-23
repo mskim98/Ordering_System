@@ -5,8 +5,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RBAC, Permission, rolePermissions } from '../decorator/rbac.decorator';
+import { RBAC } from '../decorator/rbac.decorator';
 import { Public } from '../decorator/public.decorator';
+import { Permission, rolePermissions } from '../permission/permission';
 
 @Injectable()
 export class RBACGuard implements CanActivate {

@@ -2,9 +2,7 @@ import { Exclude } from 'class-transformer';
 import { TimeLineField } from 'src/common/entity/timeline.entity';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-/**
- * 사용자 계층
- */
+/** 사용자 계층 */
 export enum Role {
   /** 관리자 */
   admin,
@@ -24,7 +22,7 @@ export class User extends TimeLineField {
   @Column()
   phone: string;
 
-  @Column({ enum: Role, default: Role.admin })
+  @Column({ enum: Role })
   role: Role;
 
   @Column()
