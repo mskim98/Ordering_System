@@ -47,7 +47,7 @@ export class UserService {
       });
 
       if (user) {
-        throw new Error('existing email');
+        throw new Error('existing');
       }
 
       /** password 암호화 */
@@ -64,7 +64,7 @@ export class UserService {
 
       return newUser;
     } catch (e) {
-      if (e.message === 'existing email') {
+      if (e.message === 'existing') {
         throw new BadRequestException('이미 가입된 이메일입니다.');
       }
 

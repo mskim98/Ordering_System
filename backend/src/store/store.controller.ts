@@ -1,15 +1,30 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  Request,
+} from '@nestjs/common';
 import { StoreService } from './store.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
+import { RBAC } from 'src/auth/decorator/rbac.decorator';
+import { Permission } from 'src/auth/permission/permission';
+import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 
 @Controller('store')
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 
   @Post()
-  create(@Body() createStoreDto: CreateStoreDto) {
-    return this.storeService.create(createStoreDto);
+  @RBAC([Permission.STORE_CREATE])
+  @UseInterceptors(TransactionInterceptor)
+  create(@Body() createStoreDto: CreateStoreDto, @Request() req) {
+    return this.storeService.create(createStoreDto, req.queryRunner);
   }
 
   @Get()

@@ -20,7 +20,7 @@ export class CommonService {
       const { values } = cusorObj;
 
       const columns = Object.keys(values);
-      console.log(values, order, columns);
+
       /** 비교 연산 설정 */
       const comparisonOperator = order.some((o) => o.endsWith('DESC'))
         ? '<'
@@ -28,15 +28,14 @@ export class CommonService {
 
       /** 비교할 column 설정 */
       const whereConditions = columns.map((c) => `${qb.alias}.${c}`).join(', ');
-      console.log(whereConditions);
+
       /** 비교할 값 설정 */
       const whereParams = columns.map((c) => `:${c}`).join(',');
-      console.log(whereParams);
+
       qb.where(
         `(${whereConditions}) ${comparisonOperator} (${whereParams})`,
         values,
       );
-      console.log(qb.getQueryAndParameters());
     }
 
     for (let i = 0; i < order.length; i++) {

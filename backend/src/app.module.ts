@@ -7,8 +7,13 @@ import { envVaribaleKeys } from './common/const/env.const';
 import { User } from './user/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { TokenAuthanticator } from './auth/middleware/tokenAuthanticator.middleware';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { RBACGuard } from './auth/guard/rbac.guard';
+import { StoreModule } from './store/store.module';
+import { Store } from './store/entities/store.entity';
+import { TransactionInterceptor } from './common/interceptor/transaction.interceptor';
+import { TimeoutInterceptor } from './common/interceptor/timeout.interceptor';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -37,7 +42,7 @@ import { RBACGuard } from './auth/guard/rbac.guard';
         username: configService.get<string>(envVaribaleKeys.dbUsername),
         password: configService.get<string>(envVaribaleKeys.dbPassword),
         database: configService.get<string>(envVaribaleKeys.dbDatabase),
-        entities: [User],
+        entities: [User, Store],
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -45,12 +50,22 @@ import { RBACGuard } from './auth/guard/rbac.guard';
     /** 사용 모듈 */
     UserModule,
     AuthModule,
+    StoreModule,
+    CommonModule,
   ],
   /** 모든 요청에 대해서 AuthGuard를 적용 */
   providers: [
     {
       provide: APP_GUARD,
       useClass: RBACGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TimeoutInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransactionInterceptor,
     },
   ],
 })

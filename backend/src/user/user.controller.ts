@@ -14,7 +14,8 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { RBAC, Permission } from 'src/auth/decorator/rbac.decorator';
+import { RBAC } from 'src/auth/decorator/rbac.decorator';
+import { Permission } from 'src/auth/permission/permission';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 
 @Controller('user')
