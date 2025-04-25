@@ -2,41 +2,64 @@ import {
   Controller,
   Get,
   Post,
-  Body,
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  Request,
+  Query,
+  Body,
 } from '@nestjs/common';
 import { ItemService } from './item.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { RBAC } from 'src/auth/decorator/rbac.decorator';
+import { Permission } from 'src/auth/permission/permission';
+import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
+import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 
 @Controller('item')
 export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 
   @Post()
-  create(@Body() createItemDto: CreateItemDto) {
-    return this.itemService.create(createItemDto);
+  @RBAC([Permission.ITEM_MANAGEMENT])
+  @UseInterceptors(TransactionInterceptor)
+  async create(@Body() createItemDto: CreateItemDto, @Request() req) {
+    return await this.itemService.create(createItemDto, req.queryRunner);
   }
 
+  /** 전체 품목 조회 */
   @Get()
-  findAll() {
-    return this.itemService.findAll();
+  @RBAC([Permission.ITEM_MANAGEMENT])
+  async findAll(@Query() DTO: CursorPagenationDto) {
+    return await this.itemService.findAll(DTO);
   }
 
+  /** 품목 상세 조회 */
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.itemService.findOne(+id);
+  @RBAC([Permission.ITEM_MANAGEMENT])
+  async findOne(@Param('id') id: string) {
+    return await this.itemService.findOne(+id);
   }
 
+  /** 품목 수정 */
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateItemDto: UpdateItemDto) {
-    return this.itemService.update(+id, updateItemDto);
+  @RBAC([Permission.ITEM_MANAGEMENT])
+  @UseInterceptors(TransactionInterceptor)
+  async update(
+    @Param('id') id: string,
+    @Body() updateItemDto: UpdateItemDto,
+    @Request() req,
+  ) {
+    return await this.itemService.update(+id, updateItemDto, req.queryRunner);
   }
 
+  /** 품목 삭제 */
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.itemService.remove(+id);
+  @RBAC([Permission.ITEM_MANAGEMENT])
+  @UseInterceptors(TransactionInterceptor)
+  async remove(@Param('id') id: string, @Request() req) {
+    return await this.itemService.remove(+id, req.queryRunner);
   }
 }

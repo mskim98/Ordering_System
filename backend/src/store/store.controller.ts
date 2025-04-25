@@ -24,7 +24,7 @@ export class StoreController {
 
   /** 점포 생성 */
   @Post()
-  @RBAC([Permission.STORE_CREATE])
+  @RBAC([Permission.STORE_MANAGEMENT])
   @UseInterceptors(TransactionInterceptor)
   create(@Body() createStoreDto: CreateStoreDto, @Request() req) {
     return this.storeService.create(createStoreDto, req.queryRunner);
@@ -32,21 +32,21 @@ export class StoreController {
 
   /** 전체 점포 목록 조회 */
   @Get()
-  @RBAC([Permission.STORE_READ])
+  @RBAC([Permission.STORE_MANAGEMENT])
   findAll(@Query() Dto: CursorPagenationDto) {
     return this.storeService.findAll(Dto);
   }
 
   /** 점포 상세 조회 */
   @Get(':id')
-  @RBAC([Permission.STORE_READ])
+  @RBAC([Permission.STORE_MANAGEMENT])
   findOne(@Param('id') id: string) {
     return this.storeService.findOne(+id);
   }
 
   /** 점포 정보 업데이트 */
   @Patch(':id')
-  @RBAC([Permission.STORE_UPDATE])
+  @RBAC([Permission.STORE_MANAGEMENT])
   @UseInterceptors(TransactionInterceptor)
   async update(
     @Param('id') id: string,
@@ -58,7 +58,7 @@ export class StoreController {
 
   /** 점포 삭제 */
   @Delete(':id')
-  @RBAC([Permission.STORE_DELETE])
+  @RBAC([Permission.STORE_MANAGEMENT])
   @UseInterceptors(TransactionInterceptor)
   remove(@Param('id') id: string, @Request() req) {
     return this.storeService.remove(+id, req.queryRunner);

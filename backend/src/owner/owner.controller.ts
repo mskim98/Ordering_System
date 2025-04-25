@@ -23,26 +23,26 @@ export class OwnerController {
   constructor(private readonly ownerService: OwnerService) {}
 
   @Post()
-  @RBAC([Permission.OWNER_HANDLE])
+  @RBAC([Permission.OWNER_MANAGEMENT])
   @UseInterceptors(TransactionInterceptor)
   async create(@Body() createOwnerDto: CreateOwnerDto, @Request() req) {
     return await this.ownerService.create(createOwnerDto, req.queryRunner);
   }
 
   @Get()
-  @RBAC([Permission.OWNER_HANDLE])
+  @RBAC([Permission.OWNER_MANAGEMENT])
   findAll(@Query() Dto: CursorPagenationDto) {
     return this.ownerService.findAll(Dto);
   }
 
   @Get(':id')
-  @RBAC([Permission.OWNER_HANDLE])
+  @RBAC([Permission.OWNER_MANAGEMENT])
   findOne(@Param('id') id: string) {
     return this.ownerService.findOne(+id);
   }
 
   @Patch(':id')
-  @RBAC([Permission.OWNER_HANDLE])
+  @RBAC([Permission.OWNER_MANAGEMENT])
   update(
     @Param('id') id: string,
     @Body() updateOwnerDto: UpdateOwnerDto,
@@ -52,7 +52,7 @@ export class OwnerController {
   }
 
   @Delete(':id')
-  @RBAC([Permission.OWNER_HANDLE])
+  @RBAC([Permission.OWNER_MANAGEMENT])
   remove(@Param('id') id: string) {
     return this.ownerService.remove(+id);
   }
