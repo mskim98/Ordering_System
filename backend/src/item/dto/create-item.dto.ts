@@ -1,24 +1,44 @@
-import { IsString, IsNotEmpty, IsBoolean, IsOptional } from 'class-validator';
-import { Column } from 'typeorm';
+import {
+  IsString,
+  IsNotEmpty,
+  IsBoolean,
+  IsOptional,
+  IsEnum,
+  IsInt,
+  Min,
+  IsNumber,
+} from 'class-validator';
+import { ItemType } from '../entities/item.entity';
 
 export class CreateItemDto {
   @IsString()
   @IsNotEmpty()
-  @Column()
   name: string;
 
-  @IsString()
+  @IsEnum(ItemType)
   @IsNotEmpty()
-  @Column()
-  type: string;
+  type: ItemType;
 
   @IsBoolean()
-  @IsNotEmpty()
-  @Column()
-  useCondition: boolean = true;
+  @IsOptional()
+  useCondition?: boolean = true;
 
   @IsString()
   @IsOptional()
-  @Column()
   specification?: string;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  priceIn?: number = 0;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  priceOut?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  margin?: number;
 }

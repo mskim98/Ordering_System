@@ -1,26 +1,44 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateItemDto } from './create-item.dto';
-import { IsString, IsBoolean, IsOptional } from 'class-validator';
-import { Column } from 'typeorm';
+import {
+  IsString,
+  IsBoolean,
+  IsOptional,
+  IsEnum,
+  IsInt,
+  Min,
+} from 'class-validator';
+import { ItemType } from '../entities/item.entity';
 
 export class UpdateItemDto extends PartialType(CreateItemDto) {
   @IsString()
   @IsOptional()
-  @Column()
   name?: string;
 
-  @IsString()
+  @IsEnum(ItemType)
   @IsOptional()
-  @Column()
-  type?: string;
+  type?: ItemType;
 
   @IsBoolean()
   @IsOptional()
-  @Column()
-  useCondition?: boolean = true;
+  useCondition?: boolean;
 
   @IsString()
   @IsOptional()
-  @Column()
   specification?: string;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  priceIn?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  margin?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  priceOut?: number;
 }

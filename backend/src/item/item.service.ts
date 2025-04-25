@@ -10,6 +10,7 @@ import { Repository, QueryRunner } from 'typeorm';
 import { Item } from './entities/item.entity';
 import { CommonService } from 'src/common/common.service';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
+import { Price } from './entities/price.entity';
 
 @Injectable()
 export class ItemService {
@@ -29,15 +30,62 @@ export class ItemService {
         throw new BadRequestException('이미 존재하는 품목입니다.');
       }
 
+      const { priceIn, margin, priceOut, ...itemData } = createItemDto;
+      if (margin && priceOut) {
+        throw new BadRequestException('마진과 출고가중 하나만 입력해주세요.');
+      }
+
       const newItem = await queryRunner.manager.save(Item, {
-        ...createItemDto,
+        ...itemData,
       });
+
+      /** 입고가만 있는 경우 */
+      if (
+        priceIn !== undefined &&
+        margin === undefined &&
+        priceOut === undefined
+      ) {
+        const newPrice = queryRunner.manager.create(Price, {
+          item: newItem,
+          priceIn,
+          priceOut: priceIn,
+          margin: 0,
+        });
+        await queryRunner.manager.save(Price, newPrice);
+      }
+
+      /* 입고가와 출고가가 있는 경우 */
+      if (priceIn !== undefined && priceOut !== undefined) {
+        const calculatedMargin = ((priceOut - priceIn) / priceOut) * 100;
+        const newPrice = queryRunner.manager.create(Price, {
+          item: newItem,
+          priceIn,
+          priceOut,
+          margin: calculatedMargin,
+        });
+        await queryRunner.manager.save(Price, newPrice);
+      }
+
+      /** 입고가와 마진이 있는 경우 */
+      if (priceIn !== undefined && margin !== undefined) {
+        const calculatedPriceOut = priceIn * (1 + margin / 100);
+        const newPrice = queryRunner.manager.create(Price, {
+          item: newItem,
+          priceIn,
+          priceOut: calculatedPriceOut,
+          margin,
+        });
+        await queryRunner.manager.save(Price, newPrice);
+      }
 
       return await queryRunner.manager.findOne(Item, {
         where: { id: newItem.id },
+        relations: ['price'],
       });
     } catch (e) {
-      throw new BadRequestException('품목 생성에 실패했습니다.');
+      if (e instanceof BadRequestException) {
+        throw e;
+      }
     }
   }
 
@@ -49,7 +97,7 @@ export class ItemService {
         await this.commonService.CursorPagenationParamsQb(qb, Dto);
 
       return { results, nextCusor };
-    } catch (e) {
+    } catch {
       throw new BadRequestException('품목 조회에 실패했습니다.');
     }
   }
@@ -60,7 +108,7 @@ export class ItemService {
       item = await this.itemRepository.findOne({
         where: { id },
       });
-    } catch (e) {
+    } catch {
       throw new BadRequestException('품목 조회에 실패했습니다.');
     }
 
@@ -79,22 +127,71 @@ export class ItemService {
     try {
       await this.findOne(id);
 
-      await queryRunner.manager.update(Item, { id }, { ...updateItemDto });
+      const { priceIn, priceOut, margin, ...itemData } = updateItemDto;
+
+      await queryRunner.manager.update(Item, { id }, { ...itemData });
+
+      if (priceOut !== undefined && margin !== undefined) {
+        throw new BadRequestException('마진과 출고가중 하나만 입력해주세요.');
+      }
+
+      if (
+        priceIn !== undefined &&
+        priceOut === undefined &&
+        margin === undefined
+      ) {
+        await queryRunner.manager.update(
+          Price,
+          { item: { id } },
+          {
+            priceIn,
+            margin: 0,
+            priceOut: priceIn,
+          },
+        );
+      }
+
+      if (priceIn !== undefined && priceOut !== undefined) {
+        const newMargin = ((priceOut - priceIn) / priceOut) * 100;
+        await queryRunner.manager.update(
+          Price,
+          { item: { id } },
+          { priceIn, priceOut, margin: newMargin },
+        );
+      }
+
+      if (priceIn !== undefined && margin !== undefined) {
+        const newPriceOut = priceIn * (1 + margin / 100);
+        await queryRunner.manager.update(
+          Price,
+          { item: { id } },
+          { priceIn, priceOut: newPriceOut, margin },
+        );
+      }
 
       return await queryRunner.manager.findOne(Item, {
         where: { id },
+        relations: ['price'],
       });
     } catch (e) {
-      throw new BadRequestException('품목 수정에 실패했습니다.');
+      if (e instanceof NotFoundException) {
+        throw e;
+      }
+      if (e instanceof BadRequestException) {
+        throw e;
+      }
     }
   }
 
-  async remove(id: number) {
+  async remove(id: number, queryRunner: QueryRunner) {
     try {
-      const item = await this.findOne(id);
-      await this.itemRepository.delete(id);
+      await this.findOne(id);
+      await queryRunner.manager.delete(Item, id);
       return { message: '품목 삭제 완료' };
     } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e;
+      }
       throw new BadRequestException('품목 삭제에 실패했습니다.');
     }
   }
