@@ -12,5 +12,5 @@ export class CursorPagenationDto {
 
   @IsInt()
   @IsOptional()
-  take?: number = 2;
+  take?: number = 3;
 }

@@ -1,6 +1,5 @@
 import { Exclude } from 'class-transformer';
 import { TimeLineField } from 'src/common/entity/timeline.entity';
-import { Store } from 'src/store/entities/store.entity';
 import { Owner } from 'src/owner/entities/owner.entity';
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -36,6 +35,6 @@ export class User extends TimeLineField {
   })
   password: string;
 
-  @OneToOne(() => Owner, (owner) => owner.user)
+  @OneToOne(() => Owner, (owner) => owner.user, { cascade: true })
   owner: Owner;
 }

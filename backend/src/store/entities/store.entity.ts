@@ -1,9 +1,10 @@
 import { TimeLineField } from 'src/common/entity/timeline.entity';
+import { Warehouse } from 'src/logistics/entities/warehouse.entity';
 import { Owner } from 'src/owner/entities/owner.entity';
 import {
   Column,
   Entity,
-  JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -37,6 +38,11 @@ export class Store extends TimeLineField {
   @Column({ default: false })
   active: boolean;
 
-  @OneToOne(() => Owner)
+  @OneToOne(() => Owner, (owner) => owner.store, { cascade: true })
   owner: Owner;
+
+  @OneToMany(() => Warehouse, (warehouse) => warehouse.store, {
+    onDelete: 'CASCADE',
+  })
+  warehouse: Warehouse[];
 }

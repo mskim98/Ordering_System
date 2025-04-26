@@ -8,14 +8,16 @@ export class Logistics extends TimeLineField {
   id: number;
 
   @Column()
-  type: string;
+  name: string;
 
-  @Column()
-  phone: string;
+  @Column({ nullable: true })
+  phone?: string;
 
-  @Column()
-  email: string;
+  @Column({ nullable: true })
+  email?: string;
 
-  @OneToMany(() => Warehouse, (warehouse) => warehouse.logistics)
-  warehouses: Warehouse[];
+  @OneToMany(() => Warehouse, (warehouse) => warehouse.logistics, {
+    cascade: true,
+  })
+  warehouse: Warehouse[];
 }

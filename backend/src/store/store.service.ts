@@ -27,7 +27,7 @@ export class StoreService {
       });
 
       if (store) {
-        throw new Error('existing');
+        throw new Error('exist');
       }
 
       const newStore = await queryRunner.manager.save(Store, {
@@ -36,7 +36,7 @@ export class StoreService {
 
       return newStore;
     } catch (e) {
-      if (e.message === 'existing') {
+      if (e.message === 'exist') {
         throw new BadRequestException('이미 존재하는 점포입니다.');
       }
       throw new BadRequestException('점포 생성 실패');
@@ -53,15 +53,19 @@ export class StoreService {
   }
 
   async findOne(id: number) {
-    const store = await this.storeRepository.findOne({
-      where: { id },
-    });
+    try {
+      const store = await this.storeRepository.findOne({
+        where: { id },
+      });
 
-    if (!store) {
-      throw new NotFoundException('존재하지 않는 점포입니다.');
+      if (!store) {
+        throw new NotFoundException('존재하지 않는 점포입니다.');
+      }
+
+      return store;
+    } catch (e) {
+      throw new BadRequestException('점포 조회 실패');
     }
-
-    return store;
   }
 
   async update(

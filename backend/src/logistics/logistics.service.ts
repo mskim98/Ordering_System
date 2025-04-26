@@ -1,26 +1,201 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLogisticDto } from './dto/create-logistic.dto';
 import { UpdateLogisticDto } from './dto/update-logistic.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { QueryRunner, Repository } from 'typeorm';
+import { Logistics } from './entities/logistics.entity';
+import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
+import { CommonService } from 'src/common/common.service';
+import { CreateWarehouseDto } from './dto/create-warehouse.dto';
+import { Warehouse } from './entities/warehouse.entity';
 
 @Injectable()
 export class LogisticsService {
-  create(createLogisticDto: CreateLogisticDto) {
-    return 'This action adds a new logistic';
+  constructor(
+    @InjectRepository(Logistics)
+    private logisticsRepository: Repository<Logistics>,
+    @InjectRepository(Warehouse)
+    private warehouseRepository: Repository<Warehouse>,
+    private readonly commonService: CommonService,
+  ) {}
+
+  async create(
+    Dto: CreateLogisticDto,
+    queryRunner: QueryRunner,
+  ): Promise<Logistics> {
+    try {
+      if (
+        await queryRunner.manager.exists(Logistics, {
+          where: { name: Dto.name },
+        })
+      ) {
+        throw new BadRequestException('exist');
+      }
+
+      const newLogistics = queryRunner.manager.create(Logistics, Dto);
+      return await queryRunner.manager.save(Logistics, newLogistics);
+    } catch (error) {
+      if (error.message === 'exist') {
+        throw new BadRequestException('이미 존재하는 물류업체입니다.');
+      } else {
+        throw new BadRequestException('물류업체 생성에 실패했습니다.');
+      }
+    }
   }
 
-  findAll() {
-    return `This action returns all logistics`;
+  async findAll(Dto: CursorPagenationDto): Promise<{
+    results: Logistics[];
+    nextCusor: string | null;
+  }> {
+    try {
+      const qb = this.logisticsRepository.createQueryBuilder('logistics');
+
+      const { results, nextCusor } =
+        await this.commonService.CursorPagenationParamsQb(qb, Dto);
+
+      return { results, nextCusor };
+    } catch {
+      throw new BadRequestException('물류업체 조회에 실패했습니다.');
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} logistic`;
+  async findOne(id: number): Promise<Logistics> {
+    try {
+      const logistics = await this.logisticsRepository.findOne({
+        where: { id },
+        relations: ['warehouse'],
+      });
+
+      if (!logistics) {
+        throw new NotFoundException('존재하지 않는 물류업체입니다.');
+      }
+
+      return logistics;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.log(error);
+      throw new BadRequestException('물류업체 조회에 실패했습니다.');
+    }
   }
 
-  update(id: number, updateLogisticDto: UpdateLogisticDto) {
-    return `This action updates a #${id} logistic`;
+  async update(
+    id: number,
+    Dto: UpdateLogisticDto,
+    queryRunner: QueryRunner,
+  ): Promise<Logistics> {
+    try {
+      if (!Dto) {
+        throw new BadRequestException('no data');
+      }
+      if (
+        !(await queryRunner.manager.exists(Logistics, {
+          where: { id },
+        }))
+      ) {
+        throw new NotFoundException('존재하지 않는 물류업체입니다.');
+      }
+      await this.logisticsRepository.update(id, Dto);
+      return await this.findOne(id);
+    } catch (error) {
+      if (error.message === 'no data') {
+        throw new BadRequestException('수정할 데이터가 없습니다.');
+      }
+      throw new BadRequestException('물류업체 수정에 실패했습니다.');
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} logistic`;
+  async remove(
+    id: number,
+    queryRunner: QueryRunner,
+  ): Promise<{ message: string }> {
+    try {
+      const deleteEntity = await this.findOne(id);
+      await queryRunner.manager.remove(deleteEntity);
+      return { message: '물류업체가 삭제되었습니다.' };
+    } catch {
+      throw new BadRequestException('물류업체 삭제에 실패했습니다.');
+    }
+  }
+
+  async createWarehouse(
+    id: number,
+    Dto: CreateWarehouseDto,
+    queryRunner: QueryRunner,
+  ): Promise<Warehouse> {
+    try {
+      if (!id) {
+        throw new BadRequestException('no id');
+      }
+
+      const logistics = await queryRunner.manager.findOne(Logistics, {
+        where: { id },
+      });
+
+      if (!logistics) {
+        throw new NotFoundException('no logistics');
+      }
+
+      if (
+        await queryRunner.manager.exists(Warehouse, {
+          where: { name: Dto.name },
+        })
+      ) {
+        throw new BadRequestException('exist');
+      }
+
+      const newWarehouse = queryRunner.manager.create(Warehouse, {
+        ...Dto,
+        logistics: logistics,
+      });
+
+      return await queryRunner.manager.save(Warehouse, newWarehouse);
+    } catch (error) {
+      if (error.message === 'no id') {
+        throw new BadRequestException('물류업체 id가 없습니다.');
+      }
+      if (error.message === 'exist') {
+        throw new BadRequestException('이미 존재하는 창고입니다.');
+      }
+      const logistics = await queryRunner.manager.findOne(Logistics, {
+        where: { id },
+      });
+      if (!logistics) {
+        throw new NotFoundException('존재하지 않는 물류업체입니다.');
+      }
+      throw new BadRequestException('창고 생성에 실패했습니다.');
+    }
+  }
+
+  async findAllWarehouse(
+    id: number,
+    Dto: CursorPagenationDto,
+  ): Promise<{
+    results: Warehouse[];
+    nextCusor: string | null;
+  }> {
+    try {
+      if (!id) {
+        throw new BadRequestException('no id');
+      }
+      const qb = this.warehouseRepository.createQueryBuilder('warehouse');
+
+      qb.where('warehouse.logisticsId = :id', { id });
+
+      const { results, nextCusor } =
+        await this.commonService.CursorPagenationParamsQb(qb, Dto);
+
+      return { results, nextCusor };
+    } catch (error) {
+      if (error.message === 'no id') {
+        throw new BadRequestException('물류업체 id가 없습니다.');
+      }
+      throw new BadRequestException('창고 목록 조회에 실패했습니다.');
+    }
   }
 }

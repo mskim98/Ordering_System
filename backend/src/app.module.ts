@@ -20,6 +20,8 @@ import { ItemModule } from './item/item.module';
 import { Item } from './item/entities/item.entity';
 import { Price } from './item/entities/price.entity';
 import { LogisticsModule } from './logistics/logistics.module';
+import { Logistics } from './logistics/entities/logistics.entity';
+import { Warehouse } from './logistics/entities/warehouse.entity';
 
 @Module({
   imports: [
@@ -48,7 +50,7 @@ import { LogisticsModule } from './logistics/logistics.module';
         username: configService.get<string>(envVaribaleKeys.dbUsername),
         password: configService.get<string>(envVaribaleKeys.dbPassword),
         database: configService.get<string>(envVaribaleKeys.dbDatabase),
-        entities: [User, Store, Owner, Item, Price],
+        entities: [User, Store, Owner, Item, Price, Logistics, Warehouse],
         synchronize: true,
       }),
       inject: [ConfigService],
