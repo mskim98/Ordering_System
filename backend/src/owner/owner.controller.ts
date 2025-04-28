@@ -17,8 +17,10 @@ import { RBAC } from 'src/auth/decorator/rbac.decorator';
 import { Permission } from 'src/auth/permission/permission';
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('owner')
+@ApiBearerAuth('JWT-auth')
 export class OwnerController {
   constructor(private readonly ownerService: OwnerService) {}
 

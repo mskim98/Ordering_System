@@ -35,7 +35,6 @@ export class TokenAuthanticator implements NestMiddleware {
       req.user = validatedResult;
       next();
     } catch (e) {
-      // 이미 하위에서 적절한 예외로 변환했으므로 그대로 던짐
       throw e;
     }
   }
@@ -142,13 +141,13 @@ export class TokenAuthanticator implements NestMiddleware {
         throw new UnauthorizedException('잘못된 토큰 타입');
       }
 
-      // jwt verify 과정에서 발생하는 만료 에러 처리
+      /** jwt verify 과정에서 발생하는 만료 에러 처리 */
       if (
         e.name === 'TokenExpiredError' ||
         e.message?.includes('expired') ||
         e.message?.includes('jwt expired')
       ) {
-        throw new UnauthorizedException('토큰이 만료되었습니다.'); // 직접 UnauthorizedException으로 명시적 변환
+        throw new UnauthorizedException('토큰이 만료되었습니다.');
       }
 
       throw new UnauthorizedException('Bearer 토큰 검증 실패');

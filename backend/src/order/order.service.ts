@@ -84,16 +84,15 @@ export class OrderService {
     try {
       const qb = this.orderRepository.createQueryBuilder('order');
 
-      const { results, nextCusor } =
-        await this.commonService.CursorPagenationParamsQb(qb, DTO);
-
-      return {
-        results,
-        nextCusor,
-        count: results.length,
-      };
-    } catch {
-      throw new InternalServerErrorException('주문 조회 실패');
+      // orderItems와 user 관계를 함께 로드
+      return await this.commonService.CursorPagenationParamsQb(qb, DTO, [
+        'orderItems',
+        'user',
+      ]);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `주문 조회 실패: ${error.message}`,
+      );
     }
   }
 

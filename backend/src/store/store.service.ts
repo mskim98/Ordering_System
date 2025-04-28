@@ -49,10 +49,10 @@ export class StoreService {
   async findAll(Dto: CursorPagenationDto) {
     const qb = this.storeRepository.createQueryBuilder('store');
 
-    const { results, nextCusor } =
+    const { results, nextCursor } =
       await this.commonService.CursorPagenationParamsQb(qb, Dto);
 
-    return { results, nextCusor };
+    return { results, nextCursor };
   }
 
   async findOne(id: number) {

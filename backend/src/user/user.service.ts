@@ -74,16 +74,17 @@ export class UserService {
 
   /** 전체 유저 조회 */
   async findAll(Dto: CursorPagenationDto) {
-    const qb = this.userRepository.createQueryBuilder('user');
-
     try {
-      /** 페이지네이션  */
-      const { results, nextCusor } =
-        await this.commonService.CursorPagenationParamsQb(qb, Dto);
+      const qb = this.userRepository.createQueryBuilder('user');
 
-      return { results, nextCusor };
-    } catch (e) {
-      throw new BadRequestException('전체 유저 조회 실패');
+      /** 페이지네이션 - owner 관계 포함 */
+      return await this.commonService.CursorPagenationParamsQb(
+        qb,
+        Dto,
+        'owner',
+      );
+    } catch (error) {
+      throw new BadRequestException(`전체 유저 조회 실패: ${error.message}`);
     }
   }
 
