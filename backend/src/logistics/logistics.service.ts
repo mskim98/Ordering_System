@@ -49,17 +49,22 @@ export class LogisticsService {
 
   async findAll(Dto: CursorPagenationDto): Promise<{
     results: Logistics[];
-    nextCusor: string | null;
+    nextCursor: string | null;
+    count: number;
   }> {
     try {
       const qb = this.logisticsRepository.createQueryBuilder('logistics');
 
-      const { results, nextCusor } =
-        await this.commonService.CursorPagenationParamsQb(qb, Dto);
-
-      return { results, nextCusor };
-    } catch {
-      throw new BadRequestException('물류업체 조회에 실패했습니다.');
+      // warehouse 관계를 함께 로드
+      return await this.commonService.CursorPagenationParamsQb(
+        qb,
+        Dto,
+        'warehouse',
+      );
+    } catch (error) {
+      throw new BadRequestException(
+        `물류업체 조회에 실패했습니다: ${error.message}`,
+      );
     }
   }
 
@@ -177,7 +182,8 @@ export class LogisticsService {
     Dto: CursorPagenationDto,
   ): Promise<{
     results: Warehouse[];
-    nextCusor: string | null;
+    nextCursor: string | null;
+    count: number;
   }> {
     try {
       if (!id) {
@@ -187,15 +193,19 @@ export class LogisticsService {
 
       qb.where('warehouse.logisticsId = :id', { id });
 
-      const { results, nextCusor } =
-        await this.commonService.CursorPagenationParamsQb(qb, Dto);
-
-      return { results, nextCusor };
+      // store 관계를 함께 로드
+      return await this.commonService.CursorPagenationParamsQb(
+        qb,
+        Dto,
+        'stores',
+      );
     } catch (error) {
       if (error.message === 'no id') {
         throw new BadRequestException('물류업체 id가 없습니다.');
       }
-      throw new BadRequestException('창고 목록 조회에 실패했습니다.');
+      throw new BadRequestException(
+        `창고 목록 조회에 실패했습니다: ${error.message}`,
+      );
     }
   }
 }

@@ -96,12 +96,15 @@ export class ItemService {
     try {
       const qb = this.itemRepository.createQueryBuilder('item');
 
-      const { results, nextCusor } =
-        await this.commonService.CursorPagenationParamsQb(qb, Dto);
-
-      return { results, nextCusor };
-    } catch {
-      throw new BadRequestException('품목 조회에 실패했습니다.');
+      // price와 logistics 관계를 함께 로드
+      return await this.commonService.CursorPagenationParamsQb(qb, Dto, [
+        'price',
+        'logistics',
+      ]);
+    } catch (error) {
+      throw new BadRequestException(
+        `품목 조회에 실패했습니다: ${error.message}`,
+      );
     }
   }
 

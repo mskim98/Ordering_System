@@ -18,8 +18,10 @@ import { Permission } from 'src/auth/permission/permission';
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { SetStoreWarehouseDto } from './dto/update-store-warehouse.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('store')
+@ApiBearerAuth('JWT-auth')
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 

@@ -18,8 +18,10 @@ import { Permission } from 'src/auth/permission/permission';
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { SetItemLogisticsDto } from './dto/set-item-logistics.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('item')
+@ApiBearerAuth('JWT-auth')
 export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 

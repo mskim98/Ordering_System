@@ -17,8 +17,10 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { RBAC } from 'src/auth/decorator/rbac.decorator';
 import { Permission } from 'src/auth/permission/permission';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('user')
+@ApiBearerAuth('JWT-auth')
 @UseInterceptors(
   ClassSerializerInterceptor,
 ) /** password intercepting(Entity: @toPlainOnly) */

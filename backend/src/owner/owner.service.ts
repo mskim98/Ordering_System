@@ -44,10 +44,10 @@ export class OwnerService {
   async findAll(Dto: CursorPagenationDto) {
     const qb = this.ownerRepository.createQueryBuilder('owner');
 
-    const { results, nextCusor } =
+    const { results, nextCursor } =
       await this.commonService.CursorPagenationParamsQb(qb, Dto);
 
-    return { results, nextCusor };
+    return { results, nextCursor };
   }
 
   async findOne(id: number) {
@@ -57,7 +57,7 @@ export class OwnerService {
       owner = await this.ownerRepository.findOne({
         where: { id },
       });
-    } catch (e) {
+    } catch {
       throw new InternalServerErrorException(
         '점주 - 점포 조회 중 오류가 발생했습니다.',
       );

@@ -95,7 +95,7 @@ export class AuthService {
         refreshToken: await this.issueToken(user, true),
         accessToken: await this.issueToken(user, false),
       };
-    } catch (e) {
+    } catch {
       throw new BadRequestException('잘못된 로그인 정보입니다.');
     }
   }
