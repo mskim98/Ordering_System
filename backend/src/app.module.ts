@@ -25,6 +25,7 @@ import { Warehouse } from './logistics/entities/warehouse.entity';
 import { OrderModule } from './order/order.module';
 import { Order } from './order/entities/order.entity';
 import { OrderItem } from './order/entities/orderItem.entity';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -68,6 +69,8 @@ import { OrderItem } from './order/entities/orderItem.entity';
       }),
       inject: [ConfigService],
     }),
+    /** 스케줄링 모듈 */
+    ScheduleModule.forRoot(),
     /** 사용 모듈 */
     UserModule,
     AuthModule,
@@ -96,6 +99,6 @@ import { OrderItem } from './order/entities/orderItem.entity';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TokenAuthanticator).forRoutes('*');
+    consumer.apply(TokenAuthanticator).exclude('auth/login').forRoutes('*');
   }
 }

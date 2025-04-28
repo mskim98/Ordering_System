@@ -19,11 +19,15 @@ import { Permission } from 'src/auth/permission/permission';
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { OrderScheduleService } from './order-schedule.service';
 
 @Controller('order')
 @ApiBearerAuth('JWT-auth')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly orderScheduleService: OrderScheduleService,
+  ) {}
 
   @Post()
   @RBAC([Permission.ORDER_WRITE])
@@ -60,5 +64,12 @@ export class OrderController {
   @UseInterceptors(TransactionInterceptor)
   async remove(@Param('id') id: number, @Request() req) {
     return await this.orderService.remove(+id, req.queryRunner);
+  }
+
+  // 테스트용 배치 수동 실행 엔드포인트
+  @Post('batch/update-status')
+  @RBAC([Permission.ORDER_MANAGEMENT])
+  async manualUpdateStatus() {
+    return await this.orderScheduleService.manuallyUpdateOrderStatus();
   }
 }
