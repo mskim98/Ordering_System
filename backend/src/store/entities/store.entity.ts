@@ -4,7 +4,8 @@ import { Owner } from 'src/owner/entities/owner.entity';
 import {
   Column,
   Entity,
-  OneToMany,
+  JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -41,8 +42,10 @@ export class Store extends TimeLineField {
   @OneToOne(() => Owner, (owner) => owner.store, { cascade: true })
   owner: Owner;
 
-  @OneToMany(() => Warehouse, (warehouse) => warehouse.store, {
-    onDelete: 'CASCADE',
+  @ManyToOne(() => Warehouse, (warehouse) => warehouse.stores, {
+    onDelete: 'SET NULL',
+    nullable: true,
   })
-  warehouse: Warehouse[];
+  @JoinColumn({ name: 'warehouseId' })
+  warehouse: Warehouse;
 }

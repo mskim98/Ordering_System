@@ -17,6 +17,7 @@ import { RBAC } from 'src/auth/decorator/rbac.decorator';
 import { Permission } from 'src/auth/permission/permission';
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
+import { SetStoreWarehouseDto } from './dto/update-store-warehouse.dto';
 
 @Controller('store')
 export class StoreController {
@@ -62,5 +63,12 @@ export class StoreController {
   @UseInterceptors(TransactionInterceptor)
   remove(@Param('id') id: string, @Request() req) {
     return this.storeService.remove(+id, req.queryRunner);
+  }
+
+  @Post('warehouse')
+  @RBAC([Permission.STORE_MANAGEMENT])
+  @UseInterceptors(TransactionInterceptor)
+  async setWarehouse(@Body() Dto: SetStoreWarehouseDto, @Request() req) {
+    return this.storeService.setWarehouse(Dto, req.queryRunner);
   }
 }

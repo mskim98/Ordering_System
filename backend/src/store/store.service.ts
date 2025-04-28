@@ -10,6 +10,9 @@ import { Store } from './entities/store.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { CommonService } from 'src/common/common.service';
+import { SetStoreWarehouseDto } from './dto/update-store-warehouse.dto';
+import { Warehouse } from 'src/logistics/entities/warehouse.entity';
+import console from 'console';
 
 @Injectable()
 export class StoreService {
@@ -63,7 +66,7 @@ export class StoreService {
       }
 
       return store;
-    } catch (e) {
+    } catch {
       throw new BadRequestException('점포 조회 실패');
     }
   }
@@ -93,7 +96,7 @@ export class StoreService {
       return await queryRunner.manager.findOne(Store, {
         where: { id },
       });
-    } catch (e) {
+    } catch {
       throw new BadRequestException('점포 수정 실패');
     }
   }
@@ -114,5 +117,70 @@ export class StoreService {
     }
 
     return { message: '점포 삭제 완료' };
+  }
+
+  async setWarehouse(Dto: SetStoreWarehouseDto, queryRunner: QueryRunner) {
+    try {
+      const store = await queryRunner.manager.findOne(Store, {
+        where: { id: Dto.storeId },
+      });
+
+      const warehouse = await queryRunner.manager.findOne(Warehouse, {
+        where: { id: Dto.warehouseId },
+      });
+
+      if (!store) {
+        throw new NotFoundException('not exist');
+      }
+
+      if (!warehouse) {
+        throw new NotFoundException('not exist');
+      }
+
+      await queryRunner.manager.update(
+        Store,
+        { id: Dto.storeId },
+        { warehouse: { id: Dto.warehouseId } },
+      );
+
+      return await queryRunner.manager.findOne(Store, {
+        where: { id: Dto.storeId },
+      });
+    } catch (e) {
+      if (e.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 점포 또는 창고입니다.');
+      }
+      console.log(e);
+      throw new BadRequestException('창고 설정 실패');
+    }
+  }
+
+  async updateWarehouse(Dto: SetStoreWarehouseDto, queryRunner: QueryRunner) {
+    try {
+      const store = await queryRunner.manager.findOne(Store, {
+        where: { id: Dto.storeId },
+      });
+
+      if (!store) {
+        throw new NotFoundException('not exist');
+      }
+
+      await queryRunner.manager.update(
+        Store,
+        { id: Dto.storeId },
+        {
+          warehouse: { id: Dto.warehouseId },
+        },
+      );
+
+      return await queryRunner.manager.findOne(Store, {
+        where: { id: Dto.storeId },
+      });
+    } catch (e) {
+      if (e.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 점포 또는 창고입니다.');
+      }
+      throw new BadRequestException('창고 설정 실패');
+    }
   }
 }

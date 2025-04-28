@@ -11,6 +11,8 @@ import { Item } from './entities/item.entity';
 import { CommonService } from 'src/common/common.service';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { Price } from './entities/price.entity';
+import { SetItemLogisticsDto } from './dto/set-item-logistics.dto';
+import { Logistics } from 'src/logistics/entities/logistics.entity';
 
 @Injectable()
 export class ItemService {
@@ -86,6 +88,7 @@ export class ItemService {
       if (e instanceof BadRequestException) {
         throw e;
       }
+      throw new BadRequestException('품목 생성에 실패했습니다.');
     }
   }
 
@@ -180,6 +183,7 @@ export class ItemService {
       if (e instanceof BadRequestException) {
         throw e;
       }
+      throw new BadRequestException('품목 수정에 실패했습니다.');
     }
   }
 
@@ -193,6 +197,41 @@ export class ItemService {
         throw e;
       }
       throw new BadRequestException('품목 삭제에 실패했습니다.');
+    }
+  }
+
+  async setLogistics(Dto: SetItemLogisticsDto, queryRunner: QueryRunner) {
+    try {
+      const item = await queryRunner.manager.findOne(Item, {
+        where: { id: Dto.itemId },
+      });
+
+      if (!item) {
+        throw new NotFoundException('존재하지 않는 품목입니다.');
+      }
+
+      const logistics = await queryRunner.manager.findOne(Logistics, {
+        where: { id: Dto.logisticsId },
+      });
+
+      if (!logistics) {
+        throw new NotFoundException('not exist');
+      }
+
+      await queryRunner.manager.update(
+        Item,
+        { id: Dto.itemId },
+        {
+          logistics: { id: Dto.logisticsId },
+        },
+      );
+
+      return { message: '물류업체 설정 완료' };
+    } catch (e) {
+      if (e.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 품목 또는 물류업체입니다.');
+      }
+      throw new BadRequestException('물류업체 설정에 실패했습니다.');
     }
   }
 }

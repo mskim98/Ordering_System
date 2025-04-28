@@ -1,6 +1,16 @@
 import { TimeLineField } from 'src/common/entity/timeline.entity';
 import { Price } from 'src/item/entities/price.entity';
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Logistics } from 'src/logistics/entities/logistics.entity';
+import { OrderItem } from 'src/order/entities/orderItem.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 export enum ItemType {
   냉장식품 = '냉장식품',
@@ -35,4 +45,14 @@ export class Item extends TimeLineField {
     onDelete: 'CASCADE',
   })
   price: Price;
+
+  @ManyToOne(() => Logistics, (logistics) => logistics.item, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'logisticsId' })
+  logistics: Logistics;
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.item)
+  orderItems: OrderItem[];
 }

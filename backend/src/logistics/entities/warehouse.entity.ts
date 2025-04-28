@@ -32,8 +32,6 @@ export class Warehouse extends TimeLineField {
   @JoinColumn({ name: 'logisticsId' })
   logistics: Logistics;
 
-  @OneToMany(() => Store, (store) => store.warehouse, {
-    onDelete: 'CASCADE',
-  })
-  store: Store;
+  @OneToMany(() => Store, (store) => store.warehouse, { cascade: true })
+  stores: Store[];
 }
