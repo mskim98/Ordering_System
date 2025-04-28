@@ -17,12 +17,12 @@ export class Price extends TimeLineField {
   @JoinColumn({ name: 'item_id' })
   item: Item;
 
-  @Column()
+  @Column({ type: 'decimal', precision: 10, scale: 0 })
   priceIn: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 0 })
   priceOut: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   margin: number;
 }

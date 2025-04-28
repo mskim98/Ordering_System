@@ -5,10 +5,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Store } from 'src/store/entities/store.entity';
 
-@Entity('warehouses')
+@Entity('warehouse')
 export class Warehouse extends TimeLineField {
   @PrimaryGeneratedColumn()
   id: number;
@@ -19,7 +21,17 @@ export class Warehouse extends TimeLineField {
   @Column()
   active: boolean;
 
-  @ManyToOne(() => Logistics, (logistics) => logistics.warehouses)
-  @JoinColumn({ name: 'logistics_id' })
+  @Column()
+  address: string;
+
+  @Column()
+  phone: string;
+  @ManyToOne(() => Logistics, (logistics) => logistics.warehouse, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'logisticsId' })
   logistics: Logistics;
+
+  @OneToMany(() => Store, (store) => store.warehouse, { cascade: true })
+  stores: Store[];
 }

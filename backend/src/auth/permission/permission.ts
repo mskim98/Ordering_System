@@ -9,6 +9,7 @@ export enum Permission {
   PRICE_MANAGEMENT = 'price_management', // 가격 관리
   ORDER_READ = 'order_read', // 발주 읽기
   ORDER_WRITE = 'order_write', // 발주 쓰기
+  ORDER_MANAGEMENT = 'order_management', // 발주 관리
   SALES_READ = 'sales_read', // 매출 읽기
   SALES_WRITE = 'sales_write', // 매출 쓰기
 }

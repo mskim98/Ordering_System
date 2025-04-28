@@ -15,6 +15,11 @@ async function bootstrap() {
       },
     }),
   );
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    console.log(req.body);
+    next();
+  });
   await app.listen(3000);
 }
 bootstrap();

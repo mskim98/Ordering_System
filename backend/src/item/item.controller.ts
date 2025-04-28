@@ -17,6 +17,7 @@ import { RBAC } from 'src/auth/decorator/rbac.decorator';
 import { Permission } from 'src/auth/permission/permission';
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
+import { SetItemLogisticsDto } from './dto/set-item-logistics.dto';
 
 @Controller('item')
 export class ItemController {
@@ -61,5 +62,12 @@ export class ItemController {
   @UseInterceptors(TransactionInterceptor)
   async remove(@Param('id') id: string, @Request() req) {
     return await this.itemService.remove(+id, req.queryRunner);
+  }
+
+  @Post('logistics')
+  @RBAC([Permission.ITEM_MANAGEMENT])
+  @UseInterceptors(TransactionInterceptor)
+  async setLogistics(@Body() Dto: SetItemLogisticsDto, @Request() req) {
+    return await this.itemService.setLogistics(Dto, req.queryRunner);
   }
 }
