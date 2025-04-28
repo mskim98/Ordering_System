@@ -31,8 +31,23 @@ export class UpdateOrderDto {
   storeName?: string;
 
   @IsOptional()
-  @IsEnum(['작성중', '발주중', '확인중', '발주완료', '취소'])
-  status?: '작성중' | '발주중' | '확인중' | '발주완료' | '취소';
+  @IsEnum([
+    '작성중',
+    '발주대기중',
+    '발주중',
+    '확인중',
+    '발주완료',
+    '취소',
+    '수동발주',
+  ])
+  status?:
+    | '작성중'
+    | '발주대기중'
+    | '발주중'
+    | '확인중'
+    | '발주완료'
+    | '취소'
+    | '수동발주';
 
   @IsArray()
   @ValidateNested({ each: true })

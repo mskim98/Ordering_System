@@ -33,10 +33,25 @@ export class Order extends TimeLineField {
 
   @Column({
     type: 'enum',
-    enum: ['작성중', '발주중', '확인중', '발주완료', '취소'],
+    enum: [
+      '작성중',
+      '발주대기중',
+      '발주중',
+      '확인중',
+      '발주완료',
+      '취소',
+      '수동발주',
+    ],
     default: '작성중',
   })
-  status: '작성중' | '발주중' | '확인중' | '발주완료' | '취소';
+  status:
+    | '작성중'
+    | '발주대기중'
+    | '발주중'
+    | '확인중'
+    | '발주완료'
+    | '취소'
+    | '수동발주';
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
     cascade: true,

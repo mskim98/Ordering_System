@@ -167,12 +167,6 @@ export class LogisticsService {
       if (error.message === 'exist') {
         throw new BadRequestException('이미 존재하는 창고입니다.');
       }
-      const logistics = await queryRunner.manager.findOne(Logistics, {
-        where: { id },
-      });
-      if (!logistics) {
-        throw new NotFoundException('존재하지 않는 물류업체입니다.');
-      }
       throw new BadRequestException('창고 생성에 실패했습니다.');
     }
   }
