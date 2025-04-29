@@ -20,8 +20,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const response = ctx.getResponse<Response>();
 
     const status =
       exception instanceof HttpException
@@ -65,12 +65,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       );
     }
 
-    // 클라이언트에 응답
+    // 클라이언트에 응답 - 간결한 형식으로 제공
     response.status(status).json({
       statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
       message: errorMessage,
+      path: request.url,
+      timestamp: new Date().toISOString(),
     });
   }
 }
