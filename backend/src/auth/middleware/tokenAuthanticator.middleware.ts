@@ -20,10 +20,11 @@ export class TokenAuthanticator implements NestMiddleware {
     /// Bearer $token
     const authHeader = req.headers['authorization'];
 
-    /** 검증 헤더 없는 경우 패스 */
-    /** 현재 서비스는 모두 토큰(Basic, Bearer) 인증 방식을 사용하지만 이후를 위해 usecase 확보 */
+    /** 검증 헤더 없는 경우 익명 사용자로 처리 */
     if (!authHeader) {
-      throw new UnauthorizedException('인증 토큰이 필요합니다.');
+      /** 익명 사용자로 설정하고 다음 미들웨어로 진행 */
+      req.user = { id: 'anonymous', role: 'anonymous' };
+      return next();
     }
 
     /** 검증 헤더가 있는 경우 */

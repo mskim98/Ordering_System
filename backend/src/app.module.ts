@@ -26,9 +26,13 @@ import { OrderModule } from './order/order.module';
 import { Order } from './order/entities/order.entity';
 import { OrderItem } from './order/entities/orderItem.entity';
 import { ScheduleModule } from '@nestjs/schedule';
+import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
+    /** 로깅 모듈 */
+    LoggerModule,
+
     /** env 검증 파트 */
     ConfigModule.forRoot({
       isGlobal: true,
@@ -43,6 +47,11 @@ import { ScheduleModule } from '@nestjs/schedule';
         HASH_ROUNDS: Joi.number().required(),
         ACCESS_TOKEN_SECRET: Joi.string().required(),
         REFRESH_TOKEN_SECRET: Joi.string().required(),
+        /** 로깅 환경변수 추가 */
+        LOG_DIR: Joi.string().default('logs'),
+        NODE_ENV: Joi.string()
+          .valid('development', 'production')
+          .default('development'),
       }),
     }),
     /** db 연결 파트 */
