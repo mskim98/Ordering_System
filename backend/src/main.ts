@@ -37,6 +37,13 @@ async function bootstrap() {
     }),
   );
 
+  // CORS 설정 추가
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
   // Swagger 설정
   const config = new DocumentBuilder()
     .setTitle('판크로스 발주 시스템')
@@ -74,7 +81,7 @@ async function bootstrap() {
   });
 
   // 애플리케이션 시작
-  const port = configService.get<number>('PORT', 3000);
+  const port = configService.get<number>('PORT', 3001);
   await app.listen(port);
 
   loggerService.log(

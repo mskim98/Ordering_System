@@ -9,7 +9,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role, User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { envVaribaleKeys } from 'src/common/const/env.const';
 import { ConfigService } from '@nestjs/config';
 import { CommonService } from 'src/common/common.service';
