@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { JwtModule } from '@nestjs/jwt';
+import { TokenAuthanticator } from './middleware/tokenAuthanticator.middleware';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), JwtModule.register({})],
@@ -11,4 +12,8 @@ import { JwtModule } from '@nestjs/jwt';
   providers: [AuthService],
   exports: [AuthService, JwtModule],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TokenAuthanticator).forRoutes('auth/login');
+  }
+}

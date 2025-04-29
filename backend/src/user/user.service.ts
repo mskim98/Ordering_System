@@ -9,7 +9,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role, User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { envVaribaleKeys } from 'src/common/const/env.const';
 import { ConfigService } from '@nestjs/config';
 import { CommonService } from 'src/common/common.service';
@@ -74,16 +74,17 @@ export class UserService {
 
   /** 전체 유저 조회 */
   async findAll(Dto: CursorPagenationDto) {
-    const qb = this.userRepository.createQueryBuilder('user');
-
     try {
-      /** 페이지네이션  */
-      const { results, nextCusor } =
-        await this.commonService.CursorPagenationParamsQb(qb, Dto);
+      const qb = this.userRepository.createQueryBuilder('user');
 
-      return { results, nextCusor };
-    } catch (e) {
-      throw new BadRequestException('전체 유저 조회 실패');
+      /** 페이지네이션 - owner 관계 포함 */
+      return await this.commonService.CursorPagenationParamsQb(
+        qb,
+        Dto,
+        'owner',
+      );
+    } catch (error) {
+      throw new BadRequestException(`전체 유저 조회 실패: ${error.message}`);
     }
   }
 
@@ -115,5 +116,6 @@ export class UserService {
   async remove(id: number) {
     const user = await this.IDCheck(id);
     await this.userRepository.delete(user.id);
+    return { message: '유저 삭제 완료' };
   }
 }

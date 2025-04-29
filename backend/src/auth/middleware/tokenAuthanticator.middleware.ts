@@ -20,10 +20,11 @@ export class TokenAuthanticator implements NestMiddleware {
     /// Bearer $token
     const authHeader = req.headers['authorization'];
 
-    /** 검증 헤더 없는 경우 패스 */
-    /** 현재 서비스는 모두 토큰(Basic, Bearer) 인증 방식을 사용하지만 이후를 위해 usecase 확보 */
+    /** 검증 헤더 없는 경우 익명 사용자로 처리 */
     if (!authHeader) {
-      throw new UnauthorizedException('인증 토큰이 필요합니다.');
+      /** 익명 사용자로 설정하고 다음 미들웨어로 진행 */
+      req.user = { id: 'anonymous', role: 'anonymous' };
+      return next();
     }
 
     /** 검증 헤더가 있는 경우 */
@@ -35,7 +36,6 @@ export class TokenAuthanticator implements NestMiddleware {
       req.user = validatedResult;
       next();
     } catch (e) {
-      // 이미 하위에서 적절한 예외로 변환했으므로 그대로 던짐
       throw e;
     }
   }
@@ -142,13 +142,13 @@ export class TokenAuthanticator implements NestMiddleware {
         throw new UnauthorizedException('잘못된 토큰 타입');
       }
 
-      // jwt verify 과정에서 발생하는 만료 에러 처리
+      /** jwt verify 과정에서 발생하는 만료 에러 처리 */
       if (
         e.name === 'TokenExpiredError' ||
         e.message?.includes('expired') ||
         e.message?.includes('jwt expired')
       ) {
-        throw new UnauthorizedException('토큰이 만료되었습니다.'); // 직접 UnauthorizedException으로 명시적 변환
+        throw new UnauthorizedException('토큰이 만료되었습니다.');
       }
 
       throw new UnauthorizedException('Bearer 토큰 검증 실패');

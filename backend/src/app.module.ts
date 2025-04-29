@@ -14,9 +14,25 @@ import { Store } from './store/entities/store.entity';
 import { TransactionInterceptor } from './common/interceptor/transaction.interceptor';
 import { TimeoutInterceptor } from './common/interceptor/timeout.interceptor';
 import { CommonModule } from './common/common.module';
+import { OwnerModule } from './owner/owner.module';
+import { Owner } from './owner/entities/owner.entity';
+import { ItemModule } from './item/item.module';
+import { Item } from './item/entities/item.entity';
+import { Price } from './item/entities/price.entity';
+import { LogisticsModule } from './logistics/logistics.module';
+import { Logistics } from './logistics/entities/logistics.entity';
+import { Warehouse } from './logistics/entities/warehouse.entity';
+import { OrderModule } from './order/order.module';
+import { Order } from './order/entities/order.entity';
+import { OrderItem } from './order/entities/orderItem.entity';
+import { ScheduleModule } from '@nestjs/schedule';
+import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
+    /** 로깅 모듈 */
+    LoggerModule,
+
     /** env 검증 파트 */
     ConfigModule.forRoot({
       isGlobal: true,
@@ -31,6 +47,11 @@ import { CommonModule } from './common/common.module';
         HASH_ROUNDS: Joi.number().required(),
         ACCESS_TOKEN_SECRET: Joi.string().required(),
         REFRESH_TOKEN_SECRET: Joi.string().required(),
+        /** 로깅 환경변수 추가 */
+        LOG_DIR: Joi.string().default('logs'),
+        NODE_ENV: Joi.string()
+          .valid('development', 'production')
+          .default('development'),
       }),
     }),
     /** db 연결 파트 */
@@ -42,16 +63,32 @@ import { CommonModule } from './common/common.module';
         username: configService.get<string>(envVaribaleKeys.dbUsername),
         password: configService.get<string>(envVaribaleKeys.dbPassword),
         database: configService.get<string>(envVaribaleKeys.dbDatabase),
-        entities: [User, Store],
+        entities: [
+          User,
+          Store,
+          Owner,
+          Item,
+          Price,
+          Logistics,
+          Warehouse,
+          Order,
+          OrderItem,
+        ],
         synchronize: true,
       }),
       inject: [ConfigService],
     }),
+    /** 스케줄링 모듈 */
+    ScheduleModule.forRoot(),
     /** 사용 모듈 */
     UserModule,
     AuthModule,
     StoreModule,
     CommonModule,
+    OwnerModule,
+    ItemModule,
+    LogisticsModule,
+    OrderModule,
   ],
   /** 모든 요청에 대해서 AuthGuard를 적용 */
   providers: [
@@ -71,6 +108,6 @@ import { CommonModule } from './common/common.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TokenAuthanticator).forRoutes('*');
+    consumer.apply(TokenAuthanticator).exclude('auth/login').forRoutes('*');
   }
 }

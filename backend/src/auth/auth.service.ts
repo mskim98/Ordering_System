@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role, User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import { envVaribaleKeys } from 'src/common/const/env.const';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
@@ -34,7 +34,7 @@ export class AuthService {
       },
       {
         secret: isRefreshToken ? refreshTokenSecret : accessTokenSecret,
-        expiresIn: isRefreshToken ? '24h' : 300,
+        expiresIn: isRefreshToken ? '24h' : 3000,
       },
     );
   }
@@ -95,7 +95,7 @@ export class AuthService {
         refreshToken: await this.issueToken(user, true),
         accessToken: await this.issueToken(user, false),
       };
-    } catch (e) {
+    } catch {
       throw new BadRequestException('잘못된 로그인 정보입니다.');
     }
   }
