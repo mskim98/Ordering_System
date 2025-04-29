@@ -42,51 +42,63 @@ export class OwnerService {
   }
 
   async findAll(Dto: CursorPagenationDto) {
-    const qb = this.ownerRepository.createQueryBuilder('owner');
-
-    const { results, nextCursor } =
-      await this.commonService.CursorPagenationParamsQb(qb, Dto);
-
-    return { results, nextCursor };
-  }
-
-  async findOne(id: number) {
-    let owner;
-
     try {
-      owner = await this.ownerRepository.findOne({
-        where: { id },
-      });
-    } catch {
+      const qb = this.ownerRepository.createQueryBuilder('owner');
+
+      return await this.commonService.CursorPagenationParamsQb(qb, Dto);
+    } catch (error) {
       throw new InternalServerErrorException(
         '점주 - 점포 조회 중 오류가 발생했습니다.',
       );
     }
+  }
 
-    if (!owner) {
-      throw new NotFoundException('존재하지 않는 점주 - 점포 입니다.');
+  async findOne(id: number) {
+    try {
+      const owner = await this.ownerRepository.findOne({
+        where: { id },
+      });
+
+      if (!owner) {
+        throw new NotFoundException('not exist');
+      }
+
+      return owner;
+    } catch (error) {
+      if (error.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 점주 - 점포 입니다.');
+      }
+      throw new InternalServerErrorException(
+        '점주 - 점포 조회 중 오류가 발생했습니다.',
+      );
     }
-
-    return owner;
   }
 
   async update(ownerId: number, updateDto: any, queryRunner: QueryRunner) {
     try {
+      const owner = await queryRunner.manager.exists(Owner, {
+        where: { id: ownerId },
+      });
+
+      if (!owner) {
+        throw new NotFoundException('not exist');
+      }
+
       if (updateDto.userId) {
-        const user = await queryRunner.manager.findOne(User, {
+        const user = await queryRunner.manager.exists(User, {
           where: { id: updateDto.userId },
         });
         if (!user) {
-          throw new BadRequestException('존재하지 않는 사용자입니다.');
+          throw new NotFoundException('not exist');
         }
       }
 
       if (updateDto.storeId) {
-        const store = await queryRunner.manager.findOne(Store, {
+        const store = await queryRunner.manager.exists(Store, {
           where: { id: updateDto.storeId },
         });
         if (!store) {
-          throw new BadRequestException('존재하지 않는 점포입니다.');
+          throw new NotFoundException('not exist');
         }
       }
 
@@ -95,8 +107,8 @@ export class OwnerService {
         where: { id: ownerId },
       });
     } catch (e) {
-      if (e.code === '23503') {
-        throw new BadRequestException(
+      if (e.message === 'not exist') {
+        throw new NotFoundException(
           '참조하는 사용자 또는 점포가 존재하지 않습니다.',
         );
       }
@@ -107,18 +119,9 @@ export class OwnerService {
   }
 
   async remove(id: number) {
-    try {
-      const owner = await this.findOne(id);
+    const owner = await this.findOne(id);
 
-      await this.ownerRepository.remove(owner);
-      return { message: '점주 - 점포 삭제 완료' };
-    } catch (e) {
-      if (e.message === '존재하지 않는 점주 - 점포 입니다.') {
-        throw new NotFoundException('존재하지 않는 점주 - 점포 입니다.');
-      }
-      throw new InternalServerErrorException(
-        '점주 삭제 중 오류가 발생했습니다.',
-      );
-    }
+    await this.ownerRepository.remove(owner);
+    return { message: '점주 - 점포 삭제 완료' };
   }
 }

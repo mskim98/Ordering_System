@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Order } from 'src/order/entities/order.entity';
+import { Order, OrderStatus } from 'src/order/entities/order.entity';
 
 @Injectable()
 export class OrderScheduleService {
@@ -19,8 +19,8 @@ export class OrderScheduleService {
     try {
       /** '발주대기중' 상태인 주문들을 '발주중'으로 변경 */
       const result = await this.orderRepository.update(
-        { status: '발주대기중' },
-        { status: '발주중' },
+        { status: OrderStatus.발주대기중 },
+        { status: OrderStatus.발주중 },
       );
 
       console.log(`${result.affected} 개의 주문 상태 업데이트 완료`);
