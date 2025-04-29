@@ -13,9 +13,6 @@ import { envVaribaleKeys } from 'src/common/const/env.const';
 import { ConfigService } from '@nestjs/config';
 import { CommonService } from 'src/common/common.service';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
-import { number } from 'joi';
-import { async } from 'rxjs';
-import { remove } from 'winston';
 
 @Injectable()
 export class UserService {
@@ -25,20 +22,6 @@ export class UserService {
     private readonly configService: ConfigService,
     private readonly commonService: CommonService,
   ) {}
-
-  /** 유저 확인 공통 로직 */
-  async IDCheck(id) {
-    /// 데이터베이스의 유저 존재 확인
-    const user = await this.userRepository.findOne({
-      where: { id },
-    });
-
-    if (!user) {
-      throw new NotFoundException('해당 유저가 존재하지 않습니다.');
-    }
-
-    return user;
-  }
 
   /** 회원가입 */
   async register(createUserDto: CreateUserDto) {
@@ -124,7 +107,13 @@ export class UserService {
 
   /** id 기반 유저 삭제 */
   async remove(id: number) {
-    const user = await this.IDCheck(id);
+    const user = await this.userRepository.findOne({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException('해당 유저가 존재하지 않습니다.');
+    }
     await this.userRepository.delete(user.id);
     return { message: '유저 삭제 완료' };
   }

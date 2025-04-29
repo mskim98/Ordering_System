@@ -94,13 +94,20 @@ export class ItemService {
 
   async findAll(Dto: CursorPagenationDto) {
     try {
-      const qb = this.itemRepository.createQueryBuilder('item');
-
-      // price와 logistics 관계를 함께 로드
-      return await this.commonService.CursorPagenationParamsQb(qb, Dto, [
-        'price',
-        'logistics',
-      ]);
+      const qb = this.itemRepository
+        .createQueryBuilder('item')
+        .leftJoinAndSelect('item.price', 'price')
+        .leftJoinAndSelect('item.logistics', 'logistics')
+        .select([
+          'item.id',
+          'item.name',
+          'item.useCondition',
+          'item.specification',
+          'item.type',
+          'price.priceOut',
+          'logistics.name',
+        ]);
+      return await this.commonService.CursorPagenationParamsQb(qb, Dto);
     } catch (error) {
       throw new BadRequestException(
         `품목 조회에 실패했습니다: ${error.message}`,
@@ -109,20 +116,36 @@ export class ItemService {
   }
 
   async findOne(id: number) {
-    let item;
     try {
-      item = await this.itemRepository.findOne({
+      const item = await this.itemRepository.exists({
         where: { id },
       });
-    } catch {
+
+      if (!item) {
+        throw new NotFoundException('not exist');
+      }
+
+      return await this.itemRepository
+        .createQueryBuilder('item')
+        .leftJoinAndSelect('item.price', 'price')
+        .leftJoinAndSelect('item.logistics', 'logistics')
+        .select([
+          'item.id',
+          'item.name',
+          'item.useCondition',
+          'item.specification',
+          'item.type',
+          'price.priceOut',
+          'logistics.name',
+        ])
+        .where('item.id = :id', { id })
+        .getOne();
+    } catch (error) {
+      if (error.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 품목입니다.');
+      }
       throw new BadRequestException('품목 조회에 실패했습니다.');
     }
-
-    if (!item) {
-      throw new NotFoundException('존재하지 않는 품목입니다.');
-    }
-
-    return item;
   }
 
   async update(
@@ -192,14 +215,30 @@ export class ItemService {
 
   async remove(id: number, queryRunner: QueryRunner) {
     try {
-      await this.findOne(id);
-      await queryRunner.manager.delete(Item, id);
+      // 먼저 항목이 존재하는지 확인
+      const item = await queryRunner.manager.findOne(Item, {
+        where: { id },
+      });
+
+      if (!item) {
+        throw new NotFoundException('존재하지 않는 품목입니다.');
+      }
+
+      // 품목 삭제 시도 (cascade로 price도 자동 삭제됨)
+      const result = await queryRunner.manager.delete(Item, id);
+
+      if (result.affected === 0) {
+        throw new Error('품목 삭제 실패');
+      }
+
       return { message: '품목 삭제 완료' };
     } catch (e) {
       if (e instanceof NotFoundException) {
         throw e;
       }
-      throw new BadRequestException('품목 삭제에 실패했습니다.');
+      // 오류 메시지 포함
+      console.error('삭제 오류:', e);
+      throw new BadRequestException(`품목 삭제에 실패했습니다: ${e.message}`);
     }
   }
 
@@ -210,7 +249,7 @@ export class ItemService {
       });
 
       if (!item) {
-        throw new NotFoundException('존재하지 않는 품목입니다.');
+        throw new NotFoundException('not exist');
       }
 
       const logistics = await queryRunner.manager.findOne(Logistics, {

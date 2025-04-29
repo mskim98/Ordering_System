@@ -16,6 +16,7 @@ export class RBACGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     /** public 확인 */
     const isPublic = this.reflector.get(Public, context.getHandler());
+
     if (isPublic) {
       /** Public 데코레이터가 적용된 경로는 인증 없이 통과 */
       return true;
@@ -41,7 +42,7 @@ export class RBACGuard implements CanActivate {
 
     /** 요청 자원의 필요한 권한들 가져오기 */
     const requiredPermissions = this.reflector.get<Permission[]>(
-      RBAC,
+      'permissions',
       context.getHandler(),
     );
 

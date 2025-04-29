@@ -12,6 +12,7 @@ import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { CommonService } from 'src/common/common.service';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { Warehouse } from './entities/warehouse.entity';
+import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
 
 @Injectable()
 export class LogisticsService {
@@ -41,9 +42,8 @@ export class LogisticsService {
     } catch (error) {
       if (error.message === 'exist') {
         throw new BadRequestException('이미 존재하는 물류업체입니다.');
-      } else {
-        throw new BadRequestException('물류업체 생성에 실패했습니다.');
       }
+      throw new BadRequestException('물류업체 생성에 실패했습니다.');
     }
   }
 
@@ -76,15 +76,15 @@ export class LogisticsService {
       });
 
       if (!logistics) {
-        throw new NotFoundException('존재하지 않는 물류업체입니다.');
+        throw new NotFoundException('not exist');
       }
 
       return logistics;
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
+      if (error.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 물류업체입니다.');
       }
-      console.log(error);
+
       throw new BadRequestException('물류업체 조회에 실패했습니다.');
     }
   }
@@ -103,13 +103,19 @@ export class LogisticsService {
           where: { id },
         }))
       ) {
-        throw new NotFoundException('존재하지 않는 물류업체입니다.');
+        throw new NotFoundException('not exist');
       }
-      await this.logisticsRepository.update(id, Dto);
-      return await this.findOne(id);
+      await queryRunner.manager.update(Logistics, id, Dto);
+      return await queryRunner.manager.findOne(Logistics, {
+        where: { id },
+        relations: ['warehouse'],
+      });
     } catch (error) {
       if (error.message === 'no data') {
         throw new BadRequestException('수정할 데이터가 없습니다.');
+      }
+      if (error.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 물류업체입니다.');
       }
       throw new BadRequestException('물류업체 수정에 실패했습니다.');
     }
@@ -138,12 +144,12 @@ export class LogisticsService {
         throw new BadRequestException('no id');
       }
 
-      const logistics = await queryRunner.manager.findOne(Logistics, {
-        where: { id },
-      });
-
-      if (!logistics) {
-        throw new NotFoundException('no logistics');
+      if (
+        !(await queryRunner.manager.exists(Logistics, {
+          where: { id },
+        }))
+      ) {
+        throw new NotFoundException('not exist');
       }
 
       if (
@@ -156,7 +162,7 @@ export class LogisticsService {
 
       const newWarehouse = queryRunner.manager.create(Warehouse, {
         ...Dto,
-        logistics: logistics,
+        logistics: { id },
       });
 
       return await queryRunner.manager.save(Warehouse, newWarehouse);
@@ -171,35 +177,63 @@ export class LogisticsService {
     }
   }
 
-  async findAllWarehouse(
+  async updateWarehouse(
     id: number,
-    Dto: CursorPagenationDto,
-  ): Promise<{
-    results: Warehouse[];
-    nextCursor: string | null;
-    count: number;
-  }> {
+    Dto: UpdateWarehouseDto,
+    queryRunner: QueryRunner,
+  ): Promise<Warehouse> {
     try {
       if (!id) {
         throw new BadRequestException('no id');
       }
-      const qb = this.warehouseRepository.createQueryBuilder('warehouse');
 
-      qb.where('warehouse.logisticsId = :id', { id });
+      if (
+        !(await queryRunner.manager.exists(Warehouse, {
+          where: { id },
+        }))
+      ) {
+        throw new NotFoundException('not exist');
+      }
 
-      // store 관계를 함께 로드
-      return await this.commonService.CursorPagenationParamsQb(
-        qb,
-        Dto,
-        'stores',
-      );
+      await queryRunner.manager.update(Warehouse, id, Dto);
+      return await queryRunner.manager.findOne(Warehouse, {
+        where: { id },
+      });
     } catch (error) {
       if (error.message === 'no id') {
-        throw new BadRequestException('물류업체 id가 없습니다.');
+        throw new BadRequestException('창고 id가 없습니다.');
       }
-      throw new BadRequestException(
-        `창고 목록 조회에 실패했습니다: ${error.message}`,
-      );
+      if (error.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 창고입니다.');
+      }
+      throw new BadRequestException('창고 수정에 실패했습니다.');
+    }
+  }
+
+  async removeWarehouse(
+    id: number,
+    queryRunner: QueryRunner,
+  ): Promise<{ message: string }> {
+    try {
+      if (!id) {
+        throw new BadRequestException('no id');
+      }
+      const deleteEntity = await this.warehouseRepository.findOne({
+        where: { id },
+      });
+      if (!deleteEntity) {
+        throw new NotFoundException('not exist');
+      }
+      await queryRunner.manager.remove(deleteEntity);
+      return { message: '창고가 삭제되었습니다.' };
+    } catch (error) {
+      if (error.message === 'no id') {
+        throw new BadRequestException('창고 id가 없습니다.');
+      }
+      if (error.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 창고입니다.');
+      }
+      throw new BadRequestException('창고 삭제에 실패했습니다.');
     }
   }
 }

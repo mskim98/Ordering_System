@@ -19,7 +19,10 @@ export class OrderItem {
   @JoinColumn({ name: 'orderId' })
   order: Order;
 
-  @ManyToOne(() => Item, (item) => item.orderItems)
+  @ManyToOne(() => Item, (item) => item.orderItems, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
   @JoinColumn({ name: 'itemId' })
   item: Item;
 

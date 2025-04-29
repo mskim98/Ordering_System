@@ -20,6 +20,7 @@ import { TransactionInterceptor } from 'src/common/interceptor/transaction.inter
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { OrderScheduleService } from './order-schedule.service';
+import { OrderStatus } from './entities/order.entity';
 
 @Controller('order')
 @ApiBearerAuth('JWT-auth')
@@ -29,6 +30,7 @@ export class OrderController {
     private readonly orderScheduleService: OrderScheduleService,
   ) {}
 
+  /** 주문 생성 */
   @Post()
   @RBAC([Permission.ORDER_WRITE])
   @UseInterceptors(TransactionInterceptor)
@@ -36,12 +38,22 @@ export class OrderController {
     return await this.orderService.create(createOrderDto, req.queryRunner);
   }
 
+  /** 전체 주문 목록 조회 */
   @Get()
-  @RBAC([Permission.ORDER_READ])
+  @RBAC([Permission.ORDER_MANAGEMENT])
   async findAll(@Query() cursorDto: CursorPagenationDto) {
     return await this.orderService.findAll(cursorDto);
   }
 
+  /** 본인 주문 목록 조회 */
+  @Get('my')
+  @RBAC([Permission.ORDER_READ])
+  async findMy(@Query() cursorDto: CursorPagenationDto, @Request() req) {
+    const userId = req.user?.sub;
+    return await this.orderService.findMy(cursorDto, userId);
+  }
+
+  /** 특정 주문 조회 */
   @Get(':id')
   @RBAC([Permission.ORDER_READ])
   async findOne(@Param('id', ParseIntPipe) id: number) {
@@ -64,12 +76,5 @@ export class OrderController {
   @UseInterceptors(TransactionInterceptor)
   async remove(@Param('id') id: number, @Request() req) {
     return await this.orderService.remove(+id, req.queryRunner);
-  }
-
-  // 테스트용 배치 수동 실행 엔드포인트
-  @Post('batch/update-status')
-  @RBAC([Permission.ORDER_MANAGEMENT])
-  async manualUpdateStatus() {
-    return await this.orderScheduleService.manuallyUpdateOrderStatus();
   }
 }
