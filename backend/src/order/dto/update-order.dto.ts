@@ -9,6 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { OrderStatus } from '../entities/order.entity';
 
 export class OrderItemDto {
   @IsNotEmpty()
@@ -31,23 +32,8 @@ export class UpdateOrderDto {
   storeName?: string;
 
   @IsOptional()
-  @IsEnum([
-    '작성중',
-    '발주대기중',
-    '발주중',
-    '확인중',
-    '발주완료',
-    '취소',
-    '수동발주',
-  ])
-  status?:
-    | '작성중'
-    | '발주대기중'
-    | '발주중'
-    | '확인중'
-    | '발주완료'
-    | '취소'
-    | '수동발주';
+  @IsEnum(OrderStatus)
+  status?: OrderStatus;
 
   @IsArray()
   @ValidateNested({ each: true })

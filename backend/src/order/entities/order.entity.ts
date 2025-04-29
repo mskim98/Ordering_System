@@ -10,6 +10,15 @@ import { OrderItem } from './orderItem.entity';
 import { TimeLineField } from 'src/common/entity/timeline.entity';
 import { User } from 'src/user/entities/user.entity';
 
+export enum OrderStatus {
+  작성중 = '작성중',
+  발주대기중 = '발주대기중',
+  발주중 = '발주중',
+  확인중 = '확인중',
+  발주완료 = '발주완료',
+  취소 = '취소',
+  수동발주 = '수동발주',
+}
 @Entity()
 export class Order extends TimeLineField {
   @PrimaryGeneratedColumn()
@@ -34,24 +43,17 @@ export class Order extends TimeLineField {
   @Column({
     type: 'enum',
     enum: [
-      '작성중',
-      '발주대기중',
-      '발주중',
-      '확인중',
-      '발주완료',
-      '취소',
-      '수동발주',
+      OrderStatus.작성중,
+      OrderStatus.발주대기중,
+      OrderStatus.발주중,
+      OrderStatus.확인중,
+      OrderStatus.발주완료,
+      OrderStatus.취소,
+      OrderStatus.수동발주,
     ],
-    default: '작성중',
+    default: OrderStatus.작성중,
   })
-  status:
-    | '작성중'
-    | '발주대기중'
-    | '발주중'
-    | '확인중'
-    | '발주완료'
-    | '취소'
-    | '수동발주';
+  status: OrderStatus;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
     cascade: true,

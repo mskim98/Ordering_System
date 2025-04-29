@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateOrderDto, OrderItemDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { Order } from './entities/order.entity';
+import { Order, OrderStatus } from './entities/order.entity';
 import { OrderItem } from './entities/orderItem.entity';
 import { Item } from 'src/item/entities/item.entity';
 import { QueryRunner, Repository } from 'typeorm';
@@ -28,7 +28,7 @@ export class OrderService {
         user: { id: userId },
         storeId,
         storeName,
-        status: '작성중',
+        status: OrderStatus.작성중,
         total: 0,
       });
 
@@ -47,7 +47,9 @@ export class OrderService {
 
       return queryRunner.manager.save(Order, savedOrder);
     } catch (error) {
-      console.log(error);
+      if (error.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 품목입니다.');
+      }
       throw new InternalServerErrorException('주문 생성 실패');
     }
   }
@@ -65,7 +67,7 @@ export class OrderService {
     });
 
     if (!item) {
-      throw new NotFoundException(`Item with ID ${itemId} not found`);
+      throw new NotFoundException(`존재하지 않은 품목아이디:${itemId}`);
     }
 
     const newOrderItem = await queryRunner.manager.create(OrderItem, {
@@ -89,6 +91,19 @@ export class OrderService {
         'orderItems',
         'user',
       ]);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `주문 조회 실패: ${error.message}`,
+      );
+    }
+  }
+
+  async findMy(DTO: CursorPagenationDto, userId: number) {
+    try {
+      const qb = this.orderRepository.createQueryBuilder('order');
+      qb.where('order.userId = :userId', { userId });
+
+      return await this.commonService.CursorPagenationParamsQb(qb, DTO);
     } catch (error) {
       throw new InternalServerErrorException(
         `주문 조회 실패: ${error.message}`,
@@ -121,28 +136,21 @@ export class OrderService {
     try {
       const order = await queryRunner.manager.findOne(Order, {
         where: { id },
-        relations: ['orderItems'],
       });
 
       if (!order) {
-        throw new NotFoundException(`주문 ID ${id}를 찾을 수 없습니다`);
+        throw new NotFoundException('not exist');
       }
 
       const { storeId, storeName, status, orderItems } = updateOrderDto;
 
-      if (storeId) {
-        order.storeId = storeId;
-      }
+      if (storeId) order.storeId = storeId;
+      if (storeName) order.storeName = storeName;
+      if (status) order.status = status;
 
-      if (storeName) {
-        order.storeName = storeName;
-      }
+      if (orderItems && orderItems.length > 0) {
+        await queryRunner.manager.delete(OrderItem, { order: { id } });
 
-      if (status) {
-        order.status = status;
-      }
-
-      if (orderItems) {
         const orderedItems = await Promise.all(
           orderItems.map((item) =>
             this.createOrderItem(item, order, queryRunner),
@@ -152,14 +160,17 @@ export class OrderService {
         order.total = orderedItems.reduce((acc, item) => acc + item.total, 0);
       }
 
-      return queryRunner.manager.save(Order, order);
+      await queryRunner.manager.save(Order, order);
+
+      return await queryRunner.manager.findOne(Order, {
+        where: { id },
+        relations: ['orderItems'],
+      });
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
+      if (error.message === 'not exist') {
+        throw new NotFoundException('존재하지 않는 주문입니다.');
       }
-      throw new InternalServerErrorException(
-        `주문 업데이트 실패: ${error.message}`,
-      );
+      throw new InternalServerErrorException('주문 업데이트 실패');
     }
   }
 

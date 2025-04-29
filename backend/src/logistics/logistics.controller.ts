@@ -19,6 +19,7 @@ import { TransactionInterceptor } from 'src/common/interceptor/transaction.inter
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
 
 @Controller('logistics')
 @ApiBearerAuth('JWT-auth')
@@ -70,13 +71,6 @@ export class LogisticsController {
     return this.logisticsService.remove(+id, req.queryRunner);
   }
 
-  /** 물류업체 창고 조회 */
-  @Get('warehouse/:id')
-  @RBAC([Permission.LOGISTICS_MANAGEMENT])
-  findAllWarehouse(@Param('id') id: string, @Query() Dto: CursorPagenationDto) {
-    return this.logisticsService.findAllWarehouse(+id, Dto);
-  }
-
   /** 물류업체 창고 생성 */
   @Post('warehouse/:id')
   @RBAC([Permission.LOGISTICS_MANAGEMENT])
@@ -91,5 +85,29 @@ export class LogisticsController {
       createWarehouseDto,
       req.queryRunner,
     );
+  }
+
+  /** 물류업체 창고 수정 */
+  @Patch('warehouse/:id')
+  @RBAC([Permission.LOGISTICS_MANAGEMENT])
+  @UseInterceptors(TransactionInterceptor)
+  updateWarehouse(
+    @Param('id') id: string,
+    @Body() updateWarehouseDto: UpdateWarehouseDto,
+    @Request() req,
+  ) {
+    return this.logisticsService.updateWarehouse(
+      +id,
+      updateWarehouseDto,
+      req.queryRunner,
+    );
+  }
+
+  /** 물류업체 창고 삭제 */
+  @Delete('warehouse/:id')
+  @RBAC([Permission.LOGISTICS_MANAGEMENT])
+  @UseInterceptors(TransactionInterceptor)
+  removeWarehouse(@Param('id') id: string, @Request() req) {
+    return this.logisticsService.removeWarehouse(+id, req.queryRunner);
   }
 }
