@@ -14,9 +14,9 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { RBAC } from 'src/auth/decorator/rbac.decorator';
-import { Permission } from 'src/auth/permission/permission';
-import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
+import { RBAC } from '../auth/decorator/rbac.decorator';
+import { Permission } from '../auth/permission/permission';
+import { CursorPagenationDto } from '../common/dto/cursor-pagenation.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('user')

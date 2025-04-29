@@ -10,8 +10,8 @@ export class AuthController {
   /** 로그인(검증 및 토큰 발급) */
   /** Basic Token 요구 */
   @Post('login')
-  @ApiBasicAuth('Basic-auth')
   @Public()
+  @ApiBasicAuth('Basic-auth')
   async loginUser(@Request() req) {
     return await this.authService.login(req.user);
   }
