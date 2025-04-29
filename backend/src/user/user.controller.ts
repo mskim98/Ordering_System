@@ -9,7 +9,6 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
   Query,
-  Request,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -44,8 +43,8 @@ export class UserController {
   /** 개별 유저조회  */
   @Get(':id')
   @RBAC([Permission.USER_MANAGEMENT])
-  findOne(@Param('id') id: string, @Request() req) {
-    return this.userService.findOne(+id, req.user);
+  findOne(@Param('id') id: string) {
+    return this.userService.findOne(+id);
   }
 
   /** 개별 유저 수정  */
