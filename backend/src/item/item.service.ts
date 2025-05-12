@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -154,11 +155,21 @@ export class ItemService {
     queryRunner: QueryRunner,
   ) {
     try {
-      await this.findOne(id);
+      const item = await queryRunner.manager
+        .createQueryBuilder(Item, 'item')
+        .leftJoinAndSelect('item.price', 'price')
+        .where('item.id = :id', { id })
+        .setLock('pessimistic_write')
+        .getOne();
+
+      if (!item) {
+        throw new NotFoundException(`품목 ID ${id}를 찾을 수 없습니다`);
+      }
 
       const { priceIn, priceOut, margin, ...itemData } = updateItemDto;
 
-      await queryRunner.manager.update(Item, { id }, { ...itemData });
+      Object.assign(item, itemData);
+      await queryRunner.manager.save(item);
 
       if (priceOut !== undefined && margin !== undefined) {
         throw new BadRequestException('마진과 출고가중 하나만 입력해주세요.');
@@ -169,33 +180,26 @@ export class ItemService {
         priceOut === undefined &&
         margin === undefined
       ) {
-        await queryRunner.manager.update(
-          Price,
-          { item: { id } },
-          {
-            priceIn,
-            margin: 0,
-            priceOut: priceIn,
-          },
-        );
+        item.price.priceIn = priceIn;
+        item.price.margin = 0;
+        item.price.priceOut = priceIn;
+        await queryRunner.manager.save(item.price);
       }
 
       if (priceIn !== undefined && priceOut !== undefined) {
         const newMargin = ((priceOut - priceIn) / priceOut) * 100;
-        await queryRunner.manager.update(
-          Price,
-          { item: { id } },
-          { priceIn, priceOut, margin: newMargin },
-        );
+        item.price.priceIn = priceIn;
+        item.price.priceOut = priceOut;
+        item.price.margin = newMargin;
+        await queryRunner.manager.save(item.price);
       }
 
       if (priceIn !== undefined && margin !== undefined) {
         const newPriceOut = priceIn * (1 + margin / 100);
-        await queryRunner.manager.update(
-          Price,
-          { item: { id } },
-          { priceIn, priceOut: newPriceOut, margin },
-        );
+        item.price.priceIn = priceIn;
+        item.price.priceOut = newPriceOut;
+        item.price.margin = margin;
+        await queryRunner.manager.save(item.price);
       }
 
       return await queryRunner.manager.findOne(Item, {
@@ -203,6 +207,11 @@ export class ItemService {
         relations: ['price'],
       });
     } catch (e) {
+      if (e.code === '40P01') {
+        throw new ConflictException(
+          '데이터 충돌이 발생했습니다. 다시 시도해주세요.',
+        );
+      }
       if (e instanceof NotFoundException) {
         throw e;
       }

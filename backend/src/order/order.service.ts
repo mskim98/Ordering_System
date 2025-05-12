@@ -44,6 +44,11 @@ export class OrderService {
           await new Promise((res) => setTimeout(res, 100 * Math.pow(2, i)));
           continue;
         }
+        if (error.code === '40P01') {
+          throw new ConflictException(
+            '데이터 충돌이 발생했습니다. 다시 시도해주세요.',
+          );
+        }
         throw error;
       }
     }
@@ -103,11 +108,15 @@ export class OrderService {
           error.code === '40001'
         ) {
           lastError = error;
-          // 지수 백오프 적용
           await new Promise((resolve) =>
             setTimeout(resolve, Math.pow(2, i) * 100),
           );
           continue;
+        }
+        if (error.code === '40P01') {
+          throw new ConflictException(
+            '데이터 충돌이 발생했습니다. 다시 시도해주세요.',
+          );
         }
         throw error;
       }
