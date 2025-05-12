@@ -2,13 +2,18 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { CreateOrderDto, OrderItemDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order, OrderStatus } from './entities/order.entity';
 import { OrderItem } from './entities/orderItem.entity';
 import { Item } from 'src/item/entities/item.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import {
+  QueryRunner,
+  Repository,
+  OptimisticLockVersionMismatchError,
+} from 'typeorm';
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
@@ -21,7 +26,34 @@ export class OrderService {
     private readonly commonService: CommonService,
   ) {}
 
-  async create(Dto: CreateOrderDto, queryRunner: QueryRunner): Promise<Order> {
+  async createWithRetry(
+    dto: CreateOrderDto,
+    queryRunner: QueryRunner,
+    maxRetries = 3,
+  ): Promise<Order> {
+    let lastError: any;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await this.create(dto, queryRunner);
+      } catch (error) {
+        if (
+          error.name === 'OptimisticLockVersionMismatchError' ||
+          error.code === '40001'
+        ) {
+          lastError = error;
+          await new Promise((res) => setTimeout(res, 100 * Math.pow(2, i)));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw lastError;
+  }
+
+  private async create(
+    Dto: CreateOrderDto,
+    queryRunner: QueryRunner,
+  ): Promise<Order> {
     try {
       const { userId, storeId, storeName, orderItems } = Dto;
       const newOrder = await queryRunner.manager.create(Order, {
@@ -36,7 +68,7 @@ export class OrderService {
 
       const orderedItems = await Promise.all(
         orderItems.map((item) =>
-          this.createOrderItem(item, savedOrder, queryRunner),
+          this.createOrderItemWithRetry(item, savedOrder, queryRunner),
         ),
       );
 
@@ -54,6 +86,36 @@ export class OrderService {
     }
   }
 
+  private async createOrderItemWithRetry(
+    Dto: OrderItemDto,
+    order: Order,
+    queryRunner: QueryRunner,
+    maxRetries = 3,
+  ): Promise<OrderItem> {
+    let lastError: Error;
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await this.createOrderItem(Dto, order, queryRunner);
+      } catch (error) {
+        if (
+          error instanceof OptimisticLockVersionMismatchError ||
+          error.code === '40001'
+        ) {
+          lastError = error;
+          // 지수 백오프 적용
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.pow(2, i) * 100),
+          );
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw lastError;
+  }
+
   private async createOrderItem(
     Dto: OrderItemDto,
     order: Order,
@@ -61,25 +123,39 @@ export class OrderService {
   ): Promise<OrderItem> {
     const { itemId, quantity } = Dto;
 
-    const item = await queryRunner.manager.findOne(Item, {
-      where: { id: itemId },
-      relations: ['price'],
-    });
+    try {
+      const itemWithPrice = await queryRunner.manager
+        .createQueryBuilder(Item, 'item')
+        .leftJoinAndSelect('item.price', 'price')
+        .where('item.id = :id', { id: itemId })
+        .setLock('pessimistic_read')
+        .getOne();
 
-    if (!item) {
-      throw new NotFoundException(`존재하지 않은 품목아이디:${itemId}`);
+      if (!itemWithPrice) {
+        throw new NotFoundException(`존재하지 않은 품목아이디:${itemId}`);
+      }
+
+      const newOrderItem = await queryRunner.manager.create(OrderItem, {
+        order: { id: order.id },
+        item: { id: itemId },
+        name: itemWithPrice.name,
+        quantity,
+        price: itemWithPrice.price?.priceOut || 0,
+        total: (itemWithPrice.price?.priceOut || 0) * quantity,
+      });
+
+      return await queryRunner.manager.save(OrderItem, newOrderItem);
+    } catch (error) {
+      if (
+        error instanceof OptimisticLockVersionMismatchError ||
+        error.code === '40001'
+      ) {
+        throw new ConflictException(
+          '품목 정보가 수정중입니다. 다시 시도해주세요.',
+        );
+      }
+      throw error;
     }
-
-    const newOrderItem = await queryRunner.manager.create(OrderItem, {
-      order: { id: order.id },
-      item: { id: itemId },
-      name: item.name,
-      quantity,
-      price: item.price?.priceOut || 0,
-      total: (item.price?.priceOut || 0) * quantity,
-    });
-
-    return queryRunner.manager.save(OrderItem, newOrderItem);
   }
 
   async findAll(DTO: CursorPagenationDto) {
@@ -136,6 +212,7 @@ export class OrderService {
     try {
       const order = await queryRunner.manager.findOne(Order, {
         where: { id },
+        lock: { mode: 'pessimistic_read' },
       });
 
       if (!order) {

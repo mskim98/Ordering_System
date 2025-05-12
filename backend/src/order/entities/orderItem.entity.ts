@@ -7,9 +7,10 @@ import {
 } from 'typeorm';
 import { Order } from './order.entity';
 import { Item } from 'src/item/entities/item.entity';
+import { TimeLineField } from 'src/common/entity/timeline.entity';
 
 @Entity()
-export class OrderItem {
+export class OrderItem extends TimeLineField {
   @PrimaryGeneratedColumn()
   id: number;
 
