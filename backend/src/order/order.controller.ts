@@ -20,7 +20,6 @@ import { TransactionInterceptor } from 'src/common/interceptor/transaction.inter
 import { CursorPagenationDto } from 'src/common/dto/cursor-pagenation.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { OrderScheduleService } from './order-schedule.service';
-import { OrderStatus } from './entities/order.entity';
 
 @Controller('order')
 @ApiBearerAuth('JWT-auth')
@@ -35,7 +34,10 @@ export class OrderController {
   @RBAC([Permission.ORDER_WRITE])
   @UseInterceptors(TransactionInterceptor)
   async create(@Body() createOrderDto: CreateOrderDto, @Request() req) {
-    return await this.orderService.create(createOrderDto, req.queryRunner);
+    return await this.orderService.createWithRetry(
+      createOrderDto,
+      req.queryRunner,
+    );
   }
 
   /** 전체 주문 목록 조회 */

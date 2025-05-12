@@ -33,6 +33,13 @@ export class UserController {
     return this.userService.register(createUserDto);
   }
 
+  /** 유저 조회 테스트 */
+  @Get('test')
+  @RBAC([Permission.USER_MANAGEMENT])
+  test() {
+    return this.userService.test();
+  }
+
   /** 전체 유저조회 : 관리자 권한 */
   @Get()
   @RBAC([Permission.USER_MANAGEMENT])
