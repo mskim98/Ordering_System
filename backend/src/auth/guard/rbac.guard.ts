@@ -16,21 +16,33 @@ export class RBACGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     /** public 확인 */
     const isPublic = this.reflector.get(Public, context.getHandler());
+
     if (isPublic) {
+      /** Public 데코레이터가 적용된 경로는 인증 없이 통과 */
       return true;
     }
 
     /** 토큰 타입 확인 */
     const request = context.switchToHttp().getRequest();
-    const tokenTypeCheck = !request.user || request.user.type !== 'access';
 
-    if (tokenTypeCheck) {
+    /** Public이 아닌 경로는 유저 정보가 필요 */
+    if (!request.user) {
+      throw new UnauthorizedException('인증이 필요합니다.');
+    }
+
+    /** Basic 인증 경로면 통과 (email, password가 있는 경우) */
+    if (request.user.email && request.user.password) {
+      return true;
+    }
+
+    /** JWT 토큰 인증인 경우 토큰 타입 확인 */
+    if (request.user.type !== 'access') {
       throw new UnauthorizedException('접근 토큰 타입이 올바르지 않습니다.');
     }
 
     /** 요청 자원의 필요한 권한들 가져오기 */
     const requiredPermissions = this.reflector.get<Permission[]>(
-      RBAC,
+      'permissions',
       context.getHandler(),
     );
 

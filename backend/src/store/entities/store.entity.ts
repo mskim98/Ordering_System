@@ -1,5 +1,14 @@
 import { TimeLineField } from 'src/common/entity/timeline.entity';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Warehouse } from 'src/logistics/entities/warehouse.entity';
+import { Owner } from 'src/owner/entities/owner.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 export enum Brand {
   /** 빨간어묵포차 */
@@ -29,4 +38,14 @@ export class Store extends TimeLineField {
   /** 점포 활성화 여부 */
   @Column({ default: false })
   active: boolean;
+
+  @OneToOne(() => Owner, (owner) => owner.store, { cascade: true })
+  owner: Owner;
+
+  @ManyToOne(() => Warehouse, (warehouse) => warehouse.stores, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'warehouseId' })
+  warehouse: Warehouse;
 }

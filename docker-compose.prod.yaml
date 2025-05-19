@@ -1,0 +1,87 @@
+version: "3.8"
+services:
+  # 프론트엔드 서비스 (운영 환경)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:3001
+    networks:
+      - app-network
+    # 운영 환경에서는 볼륨 마운트 없음
+
+  # 백엔드 서비스 (운영 환경)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      # 운영 환경에서는 최종 runner 이미지 사용
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - ENV=prod
+      - DB_TYPE=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_DATABASE=ordering_system
+      - HASH_ROUNDS=10
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET:-access_token_secret_key}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET:-refresh_token_secret_key}
+      - LOG_DIR=logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    command: ["pnpm", "start:prod"]
+    networks:
+      - app-network
+
+  # 데이터베이스 서비스 (운영 환경)
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=ordering_system
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # NGINX 서비스 (운영 환경)
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443" # HTTPS용 포트 추가
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl # SSL 인증서 볼륨 마운트 (필요시)
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

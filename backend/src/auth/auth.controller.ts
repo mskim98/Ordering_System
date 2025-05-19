@@ -1,6 +1,7 @@
 import { Controller, Post, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './decorator/public.decorator';
+import { ApiBasicAuth } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -10,6 +11,7 @@ export class AuthController {
   /** Basic Token 요구 */
   @Post('login')
   @Public()
+  @ApiBasicAuth('Basic-auth')
   async loginUser(@Request() req) {
     return await this.authService.login(req.user);
   }
