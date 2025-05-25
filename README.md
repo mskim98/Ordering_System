@@ -38,6 +38,8 @@
 
 ## 시스템 아키텍처
 
+![Screenshot 2025-01-27 at 3 17 04 PM](https://github.com/user-attachments/assets/0060d315-065b-49a9-a144-03ace2c8aee1)
+
 ### 백엔드 구조
 ```
 backend/
