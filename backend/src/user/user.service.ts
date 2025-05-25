@@ -57,6 +57,13 @@ export class UserService {
     }
   }
 
+  /** 유저 조회 테스트 */
+  async test() {
+    return await this.userRepository.find({
+      relations: ['owner'],
+    });
+  }
+
   /** 전체 유저 조회 */
   async findAll(Dto: CursorPagenationDto) {
     try {

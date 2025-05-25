@@ -20,6 +20,7 @@ export class TransactionInterceptor implements NestInterceptor {
     const queryRunner = this.datasource.createQueryRunner();
 
     await queryRunner.connect();
+    await queryRunner.query('SET lock_timeout = 5000;');
     await queryRunner.startTransaction();
     req.queryRunner = queryRunner;
 

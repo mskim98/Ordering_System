@@ -100,10 +100,6 @@ import { LoggerModule } from './common/logger/logger.module';
       provide: APP_INTERCEPTOR,
       useClass: TimeoutInterceptor,
     },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TransactionInterceptor,
-    },
   ],
 })
 export class AppModule implements NestModule {
